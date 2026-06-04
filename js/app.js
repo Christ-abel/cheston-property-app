@@ -98,7 +98,15 @@ const CloudinaryUploader = {
       throw new Error(err.error?.message || `Upload failed (${res.status})`);
     }
     const data = await res.json();
-    return data.secure_url;
+    
+    let url = data.secure_url;
+    // Automatically apply the Cheston company logo watermark to photos and videos
+    if (resourceType === 'image' || resourceType === 'video') {
+      // Logo public ID: mzxbgjmgh0qumndt51g7
+      const watermarkTransform = "l_mzxbgjmgh0qumndt51g7,w_0.15,c_scale/fl_layer_apply,g_south_east,x_30,y_30/";
+      url = url.replace('/upload/', `/upload/${watermarkTransform}`);
+    }
+    return url;
   },
 
   async uploadAll(photos, videos, docs, onProgress) {
