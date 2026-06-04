@@ -171,6 +171,72 @@ const Toast = {
 };
 
 // ============================
+// USER SETTINGS
+// ============================
+const UserSettings = {
+  openChangePasswordModal() {
+    let overlay = document.getElementById('pwd-modal-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.id = 'pwd-modal-overlay';
+      document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-header">
+          <h3 class="modal-title">🔑 Change Password</h3>
+          <button class="modal-close" onclick="document.getElementById('pwd-modal-overlay').classList.remove('open')">✕</button>
+        </div>
+        <form onsubmit="UserSettings.savePassword(event)">
+          <div class="form-group">
+            <label class="form-label">Current Password</label>
+            <input type="password" id="cpwd-current" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">New Password</label>
+            <input type="password" id="cpwd-new" class="form-control" required minlength="6" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm New Password</label>
+            <input type="password" id="cpwd-confirm" class="form-control" required />
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('pwd-modal-overlay').classList.remove('open')">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="cpwd-btn">Save Password</button>
+          </div>
+        </form>
+      </div>`;
+    setTimeout(() => overlay.classList.add('open'), 10);
+  },
+  async savePassword(e) {
+    e.preventDefault();
+    const curr = document.getElementById('cpwd-current').value;
+    const pwd1 = document.getElementById('cpwd-new').value;
+    const pwd2 = document.getElementById('cpwd-confirm').value;
+    const btn = document.getElementById('cpwd-btn');
+    
+    if (pwd1 !== pwd2) return Toast.error('New passwords do not match.');
+    if (pwd1.length < 6) return Toast.error('Password must be at least 6 characters.');
+    
+    const user = DB.getCurrentUser();
+    if (user.password !== curr) return Toast.error('Current password is incorrect.');
+    
+    btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+      await DB.updateUser(user.id, { password: pwd1 });
+      user.password = pwd1;
+      DB.setCurrentUser(user);
+      Toast.success('Password changed successfully!');
+      document.getElementById('pwd-modal-overlay').classList.remove('open');
+    } catch (err) {
+      Toast.error('Failed to update password.');
+      btn.disabled = false; btn.textContent = 'Save Password';
+    }
+  }
+};
+
+// ============================
 // ROUTER
 // ============================
 const Router = {
@@ -329,6 +395,7 @@ const AdminDashboard = {
                 <div class="nav-user-role"><span class="badge badge-admin" style="padding:1px 6px;font-size:0.65rem">Admin</span></div>
               </div>
             </div>
+            <button class="btn btn-secondary btn-sm" onclick="UserSettings.openChangePasswordModal()">🔑 Change Password</button>
             <button class="btn btn-secondary btn-sm" data-action="logout">🚪 Logout</button>
           </div>
         </div>
@@ -792,6 +859,7 @@ const SalespersonDashboard = {
               <div class="nav-avatar">${getInitials(user.name)}</div>
               <div><div class="nav-user-name">${user.name}</div><div class="nav-user-role" style="color:var(--success);font-size:0.7rem">● Salesperson</div></div>
             </div>
+            <button class="btn btn-secondary btn-sm" onclick="UserSettings.openChangePasswordModal()">🔑 Change Password</button>
             <button class="btn btn-secondary btn-sm" data-action="logout">🚪 Logout</button>
           </div>
         </div>
