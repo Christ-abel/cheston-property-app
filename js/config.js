@@ -67,7 +67,24 @@ const CONFIG = {
     'Westlands',  'Riverside', 'Karen',
   ],
 
-  listingTypes: ['For Sale', 'For Rent'],
+  listingTypes: ['For Sale', 'For Rent', 'For Sale & Rent'],
+
+  unitTypes: [
+    'Bedsitter / Studio',
+    '1 Bedroom',
+    '2 Bedroom',
+    '3 Bedroom',
+    '4 Bedroom',
+    '5 Bedroom',
+    'Penthouse',
+    'Townhouse',
+    'Maisonette',
+    'Villa',
+    'Bungalow',
+    'Shop / Commercial',
+    'Office Space',
+    'Land / Plot',
+  ],
 
   amenities: [
     'Swimming Pool',      'Gym/Fitness Center',   'Parking',

@@ -75,6 +75,77 @@ function copyToClipboard(text) {
 }
 
 // ============================
+// BADGE HELPER
+// ============================
+function listingBadgeClass(type) {
+  if (type === 'For Sale')        return 'badge-sale';
+  if (type === 'For Rent')        return 'badge-rent';
+  if (type === 'For Sale & Rent') return 'badge-both';
+  return 'badge-rent';
+}
+
+// ============================
+// LIGHTBOX VIEWER
+// ============================
+const LightboxViewer = {
+  images: [],
+  current: 0,
+
+  open(urls, startIndex = 0) {
+    this.images  = urls;
+    this.current = startIndex;
+    let overlay  = document.getElementById('lightbox-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'lightbox-overlay';
+      overlay.innerHTML = `
+        <div class="lightbox-backdrop" onclick="LightboxViewer.close()"></div>
+        <div class="lightbox-box">
+          <button class="lightbox-close" onclick="LightboxViewer.close()">✕</button>
+          <button class="lightbox-nav lightbox-prev" onclick="LightboxViewer.prev()">&#8592;</button>
+          <div class="lightbox-media" id="lightbox-media"></div>
+          <button class="lightbox-nav lightbox-next" onclick="LightboxViewer.next()">&#8594;</button>
+          <div class="lightbox-counter" id="lightbox-counter"></div>
+        </div>`;
+      document.body.appendChild(overlay);
+    }
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    this._render();
+  },
+
+  close() {
+    const overlay = document.getElementById('lightbox-overlay');
+    if (overlay) overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  },
+
+  prev() { this.current = (this.current - 1 + this.images.length) % this.images.length; this._render(); },
+  next() { this.current = (this.current + 1) % this.images.length; this._render(); },
+
+  _render() {
+    const url     = this.images[this.current];
+    const mediaEl = document.getElementById('lightbox-media');
+    const cntEl   = document.getElementById('lightbox-counter');
+    if (!mediaEl) return;
+    const isVideo = /\.(mp4|mov|avi|webm)/i.test(url);
+    mediaEl.innerHTML = isVideo
+      ? `<video src="${url}" controls autoplay style="max-width:100%;max-height:80vh;border-radius:8px"></video>`
+      : `<img src="${url}" alt="" style="max-width:100%;max-height:80vh;border-radius:8px;object-fit:contain" />`;
+    if (cntEl) cntEl.textContent = `${this.current + 1} / ${this.images.length}`;
+    // Hide nav arrows if only one image
+    document.querySelectorAll('.lightbox-nav').forEach(el => el.style.display = this.images.length > 1 ? '' : 'none');
+  },
+};
+
+// Close lightbox with Escape key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') LightboxViewer.close();
+  if (e.key === 'ArrowLeft')  LightboxViewer.prev();
+  if (e.key === 'ArrowRight') LightboxViewer.next();
+});
+
+// ============================
 // CLOUDINARY UPLOADER
 // ============================
 const CloudinaryUploader = {
@@ -460,9 +531,10 @@ const AdminDashboard = {
 
   async _overview() {
     const [subs, users] = await Promise.all([DB.getSubmissions(), DB.getUsers()]);
-    const totalValue = subs.reduce((s, x) => s + (Number(x.listingPrice) || 0), 0);
+    const totalValue = subs.reduce((s, x) => s + (Number(x.startingPrice || x.listingPrice) || 0), 0);
     const forSale    = subs.filter(s => s.listingType === 'For Sale').length;
     const forRent    = subs.filter(s => s.listingType === 'For Rent').length;
+    const forBoth    = subs.filter(s => s.listingType === 'For Sale & Rent').length;
     const recent     = subs.slice(0, 5);
 
     return `
@@ -475,7 +547,17 @@ const AdminDashboard = {
           <div class="stat-card" style="--stat-color:var(--navy)"><div class="stat-icon">👥</div><div class="stat-value">${users.length}</div><div class="stat-label">Total Users</div></div>
           <div class="stat-card" style="--stat-color:var(--success)"><div class="stat-icon">🏠</div><div class="stat-value">${subs.length}</div><div class="stat-label">Total Submissions</div></div>
           <div class="stat-card" style="--stat-color:var(--gold)"><div class="stat-icon">💰</div><div class="stat-value" style="font-size:1.3rem">${formatCurrency(totalValue)}</div><div class="stat-label">Total Portfolio Value</div></div>
-          <div class="stat-card" style="--stat-color:var(--warning)"><div class="stat-icon">🏷️</div><div class="stat-value">${forSale} / ${forRent}</div><div class="stat-label">For Sale / For Rent</div></div>
+          <div class="stat-card" style="--stat-color:var(--warning)">
+            <div class="stat-icon">🏷️</div>
+            <div class="stat-value" style="font-size:1rem">
+              <span style="color:var(--navy)">${forSale}</span><span style="font-size:0.7rem;color:var(--text-muted)"> sale</span>
+              &nbsp;/&nbsp;
+              <span style="color:var(--success)">${forRent}</span><span style="font-size:0.7rem;color:var(--text-muted)"> rent</span>
+              &nbsp;/&nbsp;
+              <span style="color:#7c3aed">${forBoth}</span><span style="font-size:0.7rem;color:var(--text-muted)"> both</span>
+            </div>
+            <div class="stat-label">Sale / Rent / Both</div>
+          </div>
         </div>
         <div class="card">
           <div class="card-header">
@@ -493,8 +575,8 @@ const AdminDashboard = {
                     <tr>
                       <td><div class="td-name">${s.propertyTitle}</div><div class="td-secondary">📍 ${s.propertyLocation}</div></td>
                       <td>${s.salespersonName}</td>
-                      <td><span class="badge ${s.listingType === 'For Sale' ? 'badge-sale' : 'badge-rent'}">${s.listingType}</span></td>
-                      <td class="td-price">${formatCurrency(s.listingPrice)}</td>
+                      <td><span class="badge ${listingBadgeClass(s.listingType)}">${s.listingType}</span></td>
+                      <td class="td-price">${s.unitVariants && s.unitVariants.length > 0 ? 'From ' + formatCurrency(s.startingPrice) : formatCurrency(s.listingPrice || s.startingPrice)}</td>
                       <td style="color:var(--text-muted);font-size:0.8rem">${formatDate(s.createdAt)}</td>
                       <td><button class="btn btn-secondary btn-sm" onclick="AdminDashboard.viewSubmission('${s.id}')">View</button></td>
                     </tr>`).join('')}
@@ -628,21 +710,27 @@ const AdminDashboard = {
     return `
       <div class="properties-grid">
         ${subs.map(s => {
-          const thumb = s.photos && s.photos.length > 0 && s.photos[0].startsWith('http') ? s.photos[0] : null;
+          const thumb      = s.photos && s.photos.length > 0 && s.photos[0].startsWith('http') ? s.photos[0] : null;
+          const dispPrice  = s.unitVariants && s.unitVariants.length > 0
+            ? 'From ' + formatCurrency(s.startingPrice)
+            : formatCurrency(s.listingPrice || s.startingPrice);
+          const unitSummary = s.unitVariants && s.unitVariants.length > 0
+            ? s.unitVariants.map(v => v.unitType).filter((v,i,a) => a.indexOf(v) === i).join(', ')
+            : (s.propertySize || '');
           return `
             <div class="property-card">
               <div class="property-card-header">
                 <div><div class="property-title">${s.propertyTitle}</div><div class="property-location">📍 ${s.propertyLocation}</div></div>
-                <span class="badge ${s.listingType === 'For Sale' ? 'badge-sale' : 'badge-rent'}">${s.listingType}</span>
+                <span class="badge ${listingBadgeClass(s.listingType)}">${s.listingType}</span>
               </div>
-              ${thumb ? `<div style="height:160px;overflow:hidden"><img src="${thumb}" alt="${s.propertyTitle}" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
+              ${thumb ? `<div style="height:160px;overflow:hidden;cursor:pointer" onclick="LightboxViewer.open(${JSON.stringify(s.photos.filter(u=>u.startsWith('http')))},0)"><img src="${thumb}" alt="${s.propertyTitle}" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
               <div class="property-card-body">
-                <div class="property-detail"><span class="property-detail-icon">🛏️</span>${s.propertySize}</div>
+                <div class="property-detail"><span class="property-detail-icon">🛏️</span>${unitSummary || 'N/A'}</div>
                 <div class="property-detail"><span class="property-detail-icon">🌟</span>${s.amenities || 'N/A'}</div>
                 ${s.fieldNotes ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:8px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${s.fieldNotes}</div>` : ''}
               </div>
               <div class="property-card-footer">
-                <div><div class="property-price">${formatCurrency(s.listingPrice)}</div><div class="property-agent">👤 ${s.salespersonName} · ${formatDate(s.createdAt)}</div></div>
+                <div><div class="property-price">${dispPrice}</div><div class="property-agent">👤 ${s.salespersonName} · ${formatDate(s.createdAt)}</div></div>
                 <div style="display:flex;gap:6px">
                   <button class="btn btn-secondary btn-sm" onclick="AdminDashboard.viewSubmission('${s.id}')">View</button>
                   <button class="btn btn-danger btn-sm" onclick="AdminDashboard.deleteSubmission('${s.id}')">🗑️</button>
@@ -683,24 +771,54 @@ const AdminDashboard = {
       document.body.appendChild(overlay);
     }
 
+    const photoUrls = (sub.photos || []).filter(u => u.startsWith('http'));
+    const videoUrls = (sub.videos || []).filter(u => u.startsWith('http'));
+
     const gallery = (urls, type) => {
       if (!urls || urls.length === 0) return '';
       return `
         <div style="margin-bottom:16px">
           <div class="detail-label" style="margin-bottom:8px">${type === 'photo' ? `Photos (${urls.length})` : `Videos (${urls.length})`}</div>
           <div class="photo-grid">
-            ${urls.map(url => url.startsWith('http')
+            ${urls.map((url, idx) => url.startsWith('http')
               ? (type === 'photo'
-                  ? `<div class="photo-thumb"><img src="${url}" alt="" /></div>`
-                  : `<div class="photo-thumb"><video src="${url}" controls style="width:100%;height:100%;object-fit:cover"></video></div>`)
+                  ? `<div class="photo-thumb lightbox-trigger" onclick="LightboxViewer.open(${JSON.stringify(photoUrls)},${idx})" title="Click to enlarge"><img src="${url}" alt="" /><div class="photo-thumb-overlay">🔍</div></div>`
+                  : `<div class="photo-thumb lightbox-trigger" onclick="LightboxViewer.open(${JSON.stringify(videoUrls)},${idx})" title="Click to enlarge"><video src="${url}" style="width:100%;height:100%;object-fit:cover"></video><div class="photo-thumb-overlay">▶</div></div>`)
               : `<div class="photo-thumb">${type === 'photo' ? '🖼️' : '🎥'}<br><span style="font-size:0.6rem;color:var(--text-muted)">${url.replace('pending_upload://', '')}</span></div>`
             ).join('')}
           </div>
         </div>`;
     };
 
+    // Unit variants table
+    const variantsHtml = sub.unitVariants && sub.unitVariants.length > 0 ? `
+      <div style="margin-bottom:20px">
+        <div class="detail-label" style="margin-bottom:8px">🏢 Unit Types & Pricing</div>
+        <div class="table-wrapper">
+          <table class="data-table variants-table">
+            <thead><tr><th>Unit Type</th><th>Size</th><th>Price (KSh)</th><th>Floor / Position</th><th>Units Available</th></tr></thead>
+            <tbody>
+              ${sub.unitVariants.map(v => `
+                <tr>
+                  <td><strong>${v.unitType}</strong></td>
+                  <td>${v.size || '—'}</td>
+                  <td style="color:var(--navy);font-weight:600">${formatCurrency(v.price)}</td>
+                  <td>${v.floorRange || '—'}</td>
+                  <td>${v.quantity || '—'}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:8px;font-size:0.8rem;color:var(--text-muted)">Starting from: <strong style="color:var(--navy)">${formatCurrency(sub.startingPrice)}</strong></div>
+      </div>` : '';
+
+    // Fallback for old submissions (single price)
+    const legacyPriceHtml = (!sub.unitVariants || sub.unitVariants.length === 0) ? `
+      <div class="detail-item"><div class="detail-label">Size</div><div class="detail-value">🛏️ ${sub.propertySize || '—'}</div></div>
+      <div class="detail-item"><div class="detail-label">Price</div><div class="detail-value" style="color:var(--navy);font-weight:700">${formatCurrency(sub.listingPrice || sub.startingPrice)}</div></div>` : '';
+
     overlay.innerHTML = `
-      <div class="modal" style="max-width:720px">
+      <div class="modal" style="max-width:760px">
         <div class="modal-header">
           <h3 class="modal-title">🏠 ${sub.propertyTitle}</h3>
           <button class="modal-close" onclick="document.getElementById('detail-modal-overlay').classList.remove('open')">✕</button>
@@ -709,12 +827,12 @@ const AdminDashboard = {
           <div class="detail-item"><div class="detail-label">Agent</div><div class="detail-value">👤 ${sub.salespersonName}</div></div>
           <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value">📞 ${sub.salespersonContact}</div></div>
           <div class="detail-item"><div class="detail-label">Location</div><div class="detail-value">📍 ${sub.propertyLocation}</div></div>
-          <div class="detail-item"><div class="detail-label">Size</div><div class="detail-value">🛏️ ${sub.propertySize}</div></div>
-          <div class="detail-item"><div class="detail-label">Listing Type</div><div class="detail-value"><span class="badge ${sub.listingType === 'For Sale' ? 'badge-sale' : 'badge-rent'}">${sub.listingType}</span></div></div>
-          <div class="detail-item"><div class="detail-label">Price</div><div class="detail-value" style="color:var(--navy);font-weight:700">${formatCurrency(sub.listingPrice)}</div></div>
+          <div class="detail-item"><div class="detail-label">Listing Type</div><div class="detail-value"><span class="badge ${listingBadgeClass(sub.listingType)}">${sub.listingType}</span></div></div>
+          ${legacyPriceHtml}
           <div class="detail-item"><div class="detail-label">Amenities</div><div class="detail-value">${sub.amenities || 'None listed'}</div></div>
           <div class="detail-item"><div class="detail-label">Submitted</div><div class="detail-value">${formatDateTime(sub.createdAt)}</div></div>
         </div>
+        ${variantsHtml}
         ${sub.fieldNotes ? `<div style="margin-bottom:20px"><div class="detail-label" style="margin-bottom:8px">Field Notes & Description</div><div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:0.875rem;line-height:1.7;color:var(--text-secondary)">${sub.fieldNotes}</div></div>` : ''}
         ${gallery(sub.photos, 'photo')}
         ${gallery(sub.videos, 'video')}
@@ -924,7 +1042,7 @@ const SalespersonDashboard = {
   async _overview() {
     const user = DB.getCurrentUser();
     const subs = await DB.getSubmissionsByUser(user.id);
-    const totalValue = subs.reduce((s, x) => s + (Number(x.listingPrice) || 0), 0);
+    const totalValue = subs.reduce((s, x) => s + (Number(x.startingPrice || x.listingPrice) || 0), 0);
     const recent = subs.slice(0, 3);
     return `
       <div>
@@ -946,16 +1064,19 @@ const SalespersonDashboard = {
             </div>
             <div class="properties-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
               ${recent.map(s => {
-                const thumb = s.photos && s.photos.length > 0 && s.photos[0].startsWith('http') ? s.photos[0] : null;
+                const thumb     = s.photos && s.photos.length > 0 && s.photos[0].startsWith('http') ? s.photos[0] : null;
+                const dispPrice = s.unitVariants && s.unitVariants.length > 0
+                  ? 'From ' + formatCurrency(s.startingPrice)
+                  : formatCurrency(s.listingPrice || s.startingPrice);
                 return `
                   <div class="property-card">
                     <div class="property-card-header">
                       <div><div class="property-title">${s.propertyTitle}</div><div class="property-location">📍 ${s.propertyLocation}</div></div>
-                      <span class="badge ${s.listingType === 'For Sale' ? 'badge-sale' : 'badge-rent'}">${s.listingType}</span>
+                      <span class="badge ${listingBadgeClass(s.listingType)}">${s.listingType}</span>
                     </div>
                     ${thumb ? `<div style="height:120px;overflow:hidden"><img src="${thumb}" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
                     <div class="property-card-footer">
-                      <div class="property-price">${formatCurrency(s.listingPrice)}</div>
+                      <div class="property-price">${dispPrice}</div>
                       <div style="font-size:0.75rem;color:var(--text-muted)">${formatDate(s.createdAt)}</div>
                     </div>
                   </div>`;
@@ -984,20 +1105,26 @@ const SalespersonDashboard = {
         ` : `
           <div class="properties-grid">
             ${subs.map(s => {
-              const thumb = s.photos && s.photos.length > 0 && s.photos[0].startsWith('http') ? s.photos[0] : null;
+              const thumb     = s.photos && s.photos.length > 0 && s.photos[0].startsWith('http') ? s.photos[0] : null;
+              const dispPrice = s.unitVariants && s.unitVariants.length > 0
+                ? 'From ' + formatCurrency(s.startingPrice)
+                : formatCurrency(s.listingPrice || s.startingPrice);
+              const unitSummary = s.unitVariants && s.unitVariants.length > 0
+                ? s.unitVariants.map(v => v.unitType).filter((v,i,a) => a.indexOf(v) === i).join(', ')
+                : (s.propertySize || '');
               return `
                 <div class="property-card">
                   <div class="property-card-header">
                     <div><div class="property-title">${s.propertyTitle}</div><div class="property-location">📍 ${s.propertyLocation}</div></div>
-                    <span class="badge ${s.listingType === 'For Sale' ? 'badge-sale' : 'badge-rent'}">${s.listingType}</span>
+                    <span class="badge ${listingBadgeClass(s.listingType)}">${s.listingType}</span>
                   </div>
                   ${thumb ? `<div style="height:160px;overflow:hidden"><img src="${thumb}" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
                   <div class="property-card-body">
-                    <div class="property-detail"><span class="property-detail-icon">🛏️</span>${s.propertySize}</div>
+                    <div class="property-detail"><span class="property-detail-icon">🛏️</span>${unitSummary || 'N/A'}</div>
                     <div class="property-detail"><span class="property-detail-icon">🌟</span>${s.amenities || 'N/A'}</div>
                   </div>
                   <div class="property-card-footer">
-                    <div><div class="property-price">${formatCurrency(s.listingPrice)}</div><div class="property-agent">${formatDate(s.createdAt)}</div></div>
+                    <div><div class="property-price">${dispPrice}</div><div class="property-agent">${formatDate(s.createdAt)}</div></div>
                   </div>
                 </div>`;
             }).join('')}
@@ -1010,10 +1137,11 @@ const SalespersonDashboard = {
 // PROPERTY FORM
 // ============================
 const PropertyForm = {
-  selectedPhotos: [],
-  selectedVideos: [],
-  selectedDocs:   [],
+  selectedPhotos:    [],
+  selectedVideos:    [],
+  selectedDocs:      [],
   selectedAmenities: [],
+  unitVariants:      [],   // [{unitType, size, price, floorRange, quantity}]
 
   render() {
     const user = DB.getCurrentUser();
@@ -1024,6 +1152,7 @@ const PropertyForm = {
         </div>
         <form id="property-form" onsubmit="PropertyForm.handleSubmit(event)" novalidate>
 
+          <!-- Agent Info -->
           <div class="form-card">
             <div class="form-section-title">👤 Agent Information</div>
             <div class="form-row">
@@ -1032,11 +1161,12 @@ const PropertyForm = {
             </div>
           </div>
 
+          <!-- Property Info -->
           <div class="form-card">
             <div class="form-section-title">🏠 Property Information</div>
             <div class="form-group">
               <label class="form-label" for="prop-title">Property Title <span class="required">*</span></label>
-              <input type="text" id="prop-title" class="form-control" placeholder="e.g. Riverside Heights 3BR Apartment" required />
+              <input type="text" id="prop-title" class="form-control" placeholder="e.g. Riverside Heights Apartments" required />
               <span class="form-error">Property title is required.</span>
             </div>
             <div class="form-row">
@@ -1049,17 +1179,6 @@ const PropertyForm = {
                 <span class="form-error">Please select a location.</span>
               </div>
               <div class="form-group">
-                <label class="form-label" for="prop-size">Size / Bedrooms <span class="required">*</span></label>
-                <input type="text" id="prop-size" class="form-control" placeholder="e.g. 2 bedrooms, 1500 sqft" required />
-                <span class="form-error">Property size is required.</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-card">
-            <div class="form-section-title">💼 Listing Details</div>
-            <div class="form-row">
-              <div class="form-group">
                 <label class="form-label" for="listing-type">Listing Type <span class="required">*</span></label>
                 <select id="listing-type" class="form-control" required>
                   <option value="">Select type…</option>
@@ -1067,12 +1186,26 @@ const PropertyForm = {
                 </select>
                 <span class="form-error">Please select a listing type.</span>
               </div>
-              <div class="form-group">
-                <label class="form-label" for="listing-price">Listing Price (KSh) <span class="required">*</span></label>
-                <input type="number" id="listing-price" class="form-control" placeholder="e.g. 5000000" required min="1" />
-                <span class="form-error">Please enter a valid price.</span>
-              </div>
             </div>
+          </div>
+
+          <!-- Unit Variants / Pricing -->
+          <div class="form-card">
+            <div class="form-section-title">🏢 Unit Types & Pricing <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted)">— Add one row per unit size or floor level</span></div>
+            <div class="info-box" style="margin-bottom:16px">
+              <span class="info-icon">💡</span>
+              <span>Add <strong>one row per unit type</strong>. For the same bedroom count at different floors/sizes, add separate rows. The lowest price will be shown as the “Starting from” price.</span>
+            </div>
+            <div id="unit-variants-container"></div>
+            <button type="button" class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="PropertyForm.addVariantRow()">
+              + Add Unit Type
+            </button>
+            <p id="variants-error" class="form-error" style="display:none;margin-top:8px">Please add at least one unit type with a price.</p>
+          </div>
+
+          <!-- Amenities -->
+          <div class="form-card">
+            <div class="form-section-title">🌟 Amenities & Features</div>
             <div class="form-group">
               <label class="form-label">Amenities Available</label>
               <div class="amenities-chips" id="amenities-chips">
@@ -1087,6 +1220,7 @@ const PropertyForm = {
             </div>
           </div>
 
+          <!-- Field Notes -->
           <div class="form-card">
             <div class="form-section-title">📝 Field Notes & Description</div>
             <div class="form-group">
@@ -1170,6 +1304,7 @@ const PropertyForm = {
     this.selectedVideos    = [];
     this.selectedDocs      = [];
     this.selectedAmenities = [];
+    this.unitVariants      = [];
     ['photos-zone','videos-zone','docs-zone'].forEach(zoneId => {
       const zone = document.getElementById(zoneId);
       if (!zone) return;
@@ -1182,7 +1317,137 @@ const PropertyForm = {
     });
     const ci = document.getElementById('amenity-custom-input');
     if (ci) ci.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); PropertyForm.addCustomAmenity(); } });
+    // Add first variant row automatically
+    this.addVariantRow();
   },
+
+  // ----------------------------------------------------------
+  // UNIT VARIANTS
+  // ----------------------------------------------------------
+  addVariantRow() {
+    const container = document.getElementById('unit-variants-container');
+    if (!container) return;
+    const idx = this.unitVariants.length;
+    this.unitVariants.push({ unitType: '', size: '', price: '', floorRange: '', quantity: '' });
+    const row = document.createElement('div');
+    row.className = 'variant-row';
+    row.id = `variant-row-${idx}`;
+    row.innerHTML = `
+      <div class="variant-row-inner">
+        <div class="form-group" style="flex:2;min-width:140px">
+          ${idx === 0 ? '<label class="form-label">Unit Type <span class="required">*</span></label>' : ''}
+          <select class="form-control" id="vt-type-${idx}" onchange="PropertyForm.updateVariant(${idx},'unitType',this.value)">
+            <option value="">Select type…</option>
+            ${CONFIG.unitTypes.map(t => `<option value="${t}">${t}</option>`).join('')}
+            <option value="__custom__">Custom…</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1.5;min-width:100px">
+          ${idx === 0 ? '<label class="form-label">Size (sqft/sqm)</label>' : ''}
+          <input type="text" class="form-control" id="vt-size-${idx}" placeholder="e.g. 900 sqft" oninput="PropertyForm.updateVariant(${idx},'size',this.value)" />
+        </div>
+        <div class="form-group" style="flex:2;min-width:140px">
+          ${idx === 0 ? '<label class="form-label">Price (KSh) <span class="required">*</span></label>' : ''}
+          <input type="number" class="form-control" id="vt-price-${idx}" placeholder="e.g. 5000000" min="1" oninput="PropertyForm.updateVariant(${idx},'price',this.value)" />
+        </div>
+        <div class="form-group" style="flex:1.5;min-width:110px">
+          ${idx === 0 ? '<label class="form-label">Floor / Position</label>' : ''}
+          <input type="text" class="form-control" id="vt-floor-${idx}" placeholder="e.g. Floors 1-5" oninput="PropertyForm.updateVariant(${idx},'floorRange',this.value)" />
+        </div>
+        <div class="form-group" style="flex:1;min-width:80px">
+          ${idx === 0 ? '<label class="form-label">Units Avail.</label>' : ''}
+          <input type="number" class="form-control" id="vt-qty-${idx}" placeholder="e.g. 8" min="0" oninput="PropertyForm.updateVariant(${idx},'quantity',this.value)" />
+        </div>
+        <div style="${idx === 0 ? 'padding-top:28px' : ''}">
+          <button type="button" class="btn btn-danger btn-sm" onclick="PropertyForm.removeVariantRow(${idx})" title="Remove row">✕</button>
+        </div>
+      </div>`;
+    container.appendChild(row);
+    document.getElementById(`vt-type-${idx}`)?.addEventListener('change', function() {
+      if (this.value === '__custom__') {
+        const custom = prompt('Enter custom unit type:');
+        if (custom) {
+          const opt = document.createElement('option');
+          opt.value = custom; opt.textContent = custom; opt.selected = true;
+          this.insertBefore(opt, this.lastElementChild);
+          PropertyForm.updateVariant(idx, 'unitType', custom);
+        } else { this.value = ''; }
+      }
+    });
+  },
+
+  removeVariantRow(idx) {
+    if (this.unitVariants.length <= 1) { Toast.info('You need at least one unit type.'); return; }
+    const row = document.getElementById(`variant-row-${idx}`);
+    if (row) row.remove();
+    this.unitVariants.splice(idx, 1);
+    // Re-render remaining rows to update indices
+    const container = document.getElementById('unit-variants-container');
+    if (!container) return;
+    const saved = [...this.unitVariants];
+    container.innerHTML = '';
+    this.unitVariants = [];
+    saved.forEach(v => {
+      const newIdx = this.unitVariants.length;
+      this.unitVariants.push(v);
+      this.addVariantRowFromData(newIdx, v);
+    });
+  },
+
+  addVariantRowFromData(idx, data) {
+    const container = document.getElementById('unit-variants-container');
+    if (!container) return;
+    const row = document.createElement('div');
+    row.className = 'variant-row';
+    row.id = `variant-row-${idx}`;
+    row.innerHTML = `
+      <div class="variant-row-inner">
+        <div class="form-group" style="flex:2;min-width:140px">
+          ${idx === 0 ? '<label class="form-label">Unit Type <span class="required">*</span></label>' : ''}
+          <select class="form-control" id="vt-type-${idx}" onchange="PropertyForm.updateVariant(${idx},'unitType',this.value)">
+            <option value="">Select type…</option>
+            ${CONFIG.unitTypes.map(t => `<option value="${t}" ${data.unitType===t?'selected':''}>${t}</option>`).join('')}
+            ${data.unitType && !CONFIG.unitTypes.includes(data.unitType) ? `<option value="${data.unitType}" selected>${data.unitType}</option>` : ''}
+            <option value="__custom__">Custom…</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1.5;min-width:100px">
+          ${idx === 0 ? '<label class="form-label">Size (sqft/sqm)</label>' : ''}
+          <input type="text" class="form-control" id="vt-size-${idx}" placeholder="e.g. 900 sqft" value="${data.size||''}" oninput="PropertyForm.updateVariant(${idx},'size',this.value)" />
+        </div>
+        <div class="form-group" style="flex:2;min-width:140px">
+          ${idx === 0 ? '<label class="form-label">Price (KSh) <span class="required">*</span></label>' : ''}
+          <input type="number" class="form-control" id="vt-price-${idx}" placeholder="e.g. 5000000" value="${data.price||''}" min="1" oninput="PropertyForm.updateVariant(${idx},'price',this.value)" />
+        </div>
+        <div class="form-group" style="flex:1.5;min-width:110px">
+          ${idx === 0 ? '<label class="form-label">Floor / Position</label>' : ''}
+          <input type="text" class="form-control" id="vt-floor-${idx}" placeholder="e.g. Floors 1-5" value="${data.floorRange||''}" oninput="PropertyForm.updateVariant(${idx},'floorRange',this.value)" />
+        </div>
+        <div class="form-group" style="flex:1;min-width:80px">
+          ${idx === 0 ? '<label class="form-label">Units Avail.</label>' : ''}
+          <input type="number" class="form-control" id="vt-qty-${idx}" placeholder="e.g. 8" value="${data.quantity||''}" min="0" oninput="PropertyForm.updateVariant(${idx},'quantity',this.value)" />
+        </div>
+        <div style="${idx === 0 ? 'padding-top:28px' : ''}">
+          <button type="button" class="btn btn-danger btn-sm" onclick="PropertyForm.removeVariantRow(${idx})" title="Remove row">✕</button>
+        </div>
+      </div>`;
+    container.appendChild(row);
+  },
+
+  updateVariant(idx, field, value) {
+    if (this.unitVariants[idx]) this.unitVariants[idx][field] = value;
+  },
+
+  readVariants() {
+    return this.unitVariants.map((v, idx) => ({
+      unitType:   document.getElementById(`vt-type-${idx}`)?.value  || v.unitType,
+      size:       document.getElementById(`vt-size-${idx}`)?.value  || v.size,
+      price:      Number(document.getElementById(`vt-price-${idx}`)?.value || v.price || 0),
+      floorRange: document.getElementById(`vt-floor-${idx}`)?.value || v.floorRange,
+      quantity:   document.getElementById(`vt-qty-${idx}`)?.value   || v.quantity,
+    })).filter(v => v.unitType && v.price > 0);
+  },
+
 
   toggleAmenity(name, btn) {
     const idx = this.selectedAmenities.indexOf(name);
@@ -1261,9 +1526,9 @@ const PropertyForm = {
 
   async handleSubmit(e) {
     e.preventDefault();
-    // Validate
+    // Validate required text fields
     let valid = true;
-    ['prop-title','prop-location','prop-size','listing-type','listing-price','field-notes'].forEach(id => {
+    ['prop-title','prop-location','listing-type','field-notes'].forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
       el.classList.toggle('is-invalid', !el.value.trim());
@@ -1271,11 +1536,30 @@ const PropertyForm = {
     });
     const contact = document.getElementById('sp-contact');
     if (contact && !contact.value.trim()) { contact.classList.add('is-invalid'); valid = false; }
-    if (!valid) { Toast.error('Please fill in all required fields.'); document.querySelector('.is-invalid')?.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
 
-    const overlay  = document.getElementById('submit-overlay');
-    const msgEl    = document.getElementById('submit-overlay-msg');
-    const fillEl   = document.getElementById('submit-progress-fill');
+    // Validate unit variants
+    const variants = this.readVariants();
+    const varErr   = document.getElementById('variants-error');
+    if (variants.length === 0) {
+      if (varErr) varErr.style.display = 'block';
+      valid = false;
+    } else {
+      if (varErr) varErr.style.display = 'none';
+    }
+
+    if (!valid) {
+      Toast.error('Please fill in all required fields.');
+      document.querySelector('.is-invalid, #variants-error[style*="block"]')?.scrollIntoView({ behavior:'smooth', block:'center' });
+      return;
+    }
+
+    const startingPrice = Math.min(...variants.map(v => v.price));
+    // Build a human-readable summary for propertySize (backward compat)
+    const sizeSummary   = [...new Set(variants.map(v => v.unitType))].join(', ');
+
+    const overlay = document.getElementById('submit-overlay');
+    const msgEl   = document.getElementById('submit-overlay-msg');
+    const fillEl  = document.getElementById('submit-progress-fill');
     overlay.classList.add('show');
 
     const setProgress = (msg, done, total) => {
@@ -1307,9 +1591,11 @@ const PropertyForm = {
         salespersonContact: contact.value.trim(),
         propertyTitle:      document.getElementById('prop-title').value.trim(),
         propertyLocation:   document.getElementById('prop-location').value,
-        propertySize:       document.getElementById('prop-size').value.trim(),
+        propertySize:       sizeSummary,          // human-readable summary
         listingType:        document.getElementById('listing-type').value,
-        listingPrice:       Number(document.getElementById('listing-price').value),
+        unitVariants:       variants,             // full variants array
+        startingPrice:      startingPrice,        // min price for display
+        listingPrice:       startingPrice,        // kept for backward compat
         amenities:          this.selectedAmenities.join(', '),
         fieldNotes:         document.getElementById('field-notes').value.trim(),
         photos:             photoUrls,
