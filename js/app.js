@@ -75,6 +75,38 @@ function copyToClipboard(text) {
 }
 
 // ============================
+// HTML SANITIZER — prevents XSS when inserting user data into innerHTML
+// ============================
+function sanitize(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// ============================
+// PASSWORD HASHING  (SHA-256 via Web Crypto API — no library needed)
+// ============================
+async function hashPassword(plain) {
+  // Append a fixed app-level salt so rainbow tables don't work
+  const msgBuffer = new TextEncoder().encode(plain + '::cheston2024:salt');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function verifyPassword(input, stored, isHashed) {
+  if (isHashed) {
+    const h = await hashPassword(input);
+    return h === stored;
+  }
+  // Legacy plain-text comparison (migration path)
+  return input === stored;
+}
+
+// ============================
 // BADGE HELPER
 // ============================
 function listingBadgeClass(type) {
@@ -128,9 +160,9 @@ const LightboxViewer = {
     const mediaEl = document.getElementById('lightbox-media');
     const cntEl   = document.getElementById('lightbox-counter');
     if (!mediaEl) return;
-    const isVideo = /\.(mp4|mov|avi|webm)/i.test(url);
+    const isVideo = /\.(mp4|mov|avi|webm|mkv)/i.test(url) || url.includes('/video/upload/');
     mediaEl.innerHTML = isVideo
-      ? `<video src="${url}" controls autoplay style="max-width:100%;max-height:80vh;border-radius:8px"></video>`
+      ? `<video src="${url}" controls autoplay playsinline style="max-width:100%;max-height:80vh;border-radius:8px;background:#000"></video>`
       : `<img src="${url}" alt="" style="max-width:100%;max-height:80vh;border-radius:8px;object-fit:contain" />`;
     if (cntEl) cntEl.textContent = `${this.current + 1} / ${this.images.length}`;
     // Hide nav arrows if only one image
@@ -171,7 +203,7 @@ const CloudinaryUploader = {
     const data = await res.json();
     
     let url = data.secure_url;
-    // Automatically apply the Cheston company logo watermark to photos and videos
+    // Automatically apply the Chestone company logo watermark to photos and videos
     if (resourceType === 'image' || resourceType === 'video') {
       // Logo public ID: mzxbgjmgh0qumndt51g7
       const watermarkTransform = "l_mzxbgjmgh0qumndt51g7,w_0.15,c_scale/fl_layer_apply,g_south_east,x_30,y_30/";
@@ -242,6 +274,463 @@ const Toast = {
 };
 
 // ============================
+// CONFIRM MODAL — replaces browser confirm() dialogs
+// ============================
+const ConfirmModal = {
+  show(message, onConfirm, { title = 'Confirm Action', confirmLabel = 'Confirm', confirmClass = 'btn-danger' } = {}) {
+    let overlay = document.getElementById('confirm-modal-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.id = 'confirm-modal-overlay';
+      document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:400px">
+        <div class="modal-header">
+          <h3 class="modal-title">⚠️ ${sanitize(title)}</h3>
+        </div>
+        <div style="padding:16px 24px 0;color:var(--text-secondary);font-size:0.9rem;line-height:1.6">${sanitize(message)}</div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="confirm-cancel-btn">Cancel</button>
+          <button class="btn ${confirmClass}" id="confirm-ok-btn">${sanitize(confirmLabel)}</button>
+        </div>
+      </div>`;
+    setTimeout(() => overlay.classList.add('open'), 10);
+    document.getElementById('confirm-cancel-btn').onclick = () => overlay.classList.remove('open');
+    document.getElementById('confirm-ok-btn').onclick = () => {
+      overlay.classList.remove('open');
+      onConfirm();
+    };
+  }
+};
+
+// ============================
+// MARKETING KIT
+// ============================
+const MarketingKit = {
+  _sub: null,
+
+  open(sub) {
+    this._sub = sub;
+    let overlay = document.getElementById('mkit-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.id = 'mkit-overlay';
+      document.body.appendChild(overlay);
+    }
+
+    const copy      = this.generateCopy(sub);
+    const videoUrls = (sub.videos || []).filter(u => u.startsWith('http'));
+
+    overlay.innerHTML = `
+      <div class="modal mkit-modal">
+        <div class="modal-header">
+          <h3 class="modal-title">📊 Marketing Kit — ${sanitize(sub.propertyLocation)} · ${sanitize(sub.listingType)}</h3>
+          <button class="modal-close" onclick="MarketingKit.close()">✕</button>
+        </div>
+        <div class="mkit-body">
+
+          <!-- POSTER -->
+          <div class="mkit-section">
+            <div class="mkit-section-title">🖼️ Property Poster</div>
+            <p class="form-hint" style="margin-bottom:10px">Generated from the listing data. Click Download to save as PNG (1080×1080, ready for social media).</p>
+            <div class="mkit-poster-wrap">
+              <canvas id="mkit-canvas" width="1080" height="1080"></canvas>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="MarketingKit.downloadPoster()">⬇️ Download Poster PNG</button>
+              ${videoUrls.length > 0 ? `<button class="btn btn-secondary" id="mkit-vid-toggle" onclick="MarketingKit.toggleVideos()">🎥 Show Video Downloads (${videoUrls.length})</button>` : ''}
+            </div>
+            ${videoUrls.length > 0 ? `
+              <div id="mkit-video-links" style="display:none;margin-top:14px;padding:14px;background:var(--bg-primary);border-radius:8px;border:1px solid var(--border)">
+                <div class="mkit-copy-label" style="margin-bottom:10px">Video files — right-click → Save As, or tap Download</div>
+                ${videoUrls.map((url, i) => `
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                    <a href="${url}" download target="_blank" class="btn btn-secondary btn-sm">⬇️ Video ${i + 1}</a>
+                    <span style="font-size:0.72rem;color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${url}</span>
+                  </div>`).join('')}
+                <div class="info-box" style="margin-top:10px">
+                  <span class="info-icon">💡</span>
+                  <span>To automatically brand videos with the Chestone logo, open <strong>cloudinary.com → Settings → Upload Presets → cheston_unsigned</strong> and add a logo overlay transformation.</span>
+                </div>
+              </div>` : ''}
+          </div>
+
+          <!-- MARKETING COPY -->
+          <div class="mkit-section">
+            <div class="mkit-section-title">📝 Marketing Copy</div>
+
+            <div class="mkit-copy-block">
+              <div class="mkit-copy-header">
+                <div class="mkit-copy-label">🏘️ Buy Rent Kenya — Listing Description</div>
+                <button class="btn btn-secondary btn-sm" onclick="MarketingKit.copy('mkit-brk')">📋 Copy</button>
+              </div>
+              <textarea class="form-control mkit-textarea" id="mkit-brk" readonly>${copy.buyRentKenya}</textarea>
+            </div>
+
+            <div class="mkit-copy-block">
+              <div class="mkit-copy-header">
+                <div class="mkit-copy-label">📱 Instagram / Facebook Caption</div>
+                <button class="btn btn-secondary btn-sm" onclick="MarketingKit.copy('mkit-social')">📋 Copy</button>
+              </div>
+              <textarea class="form-control mkit-textarea" id="mkit-social" readonly>${copy.social}</textarea>
+            </div>
+
+            <div class="mkit-copy-block">
+              <div class="mkit-copy-header">
+                <div class="mkit-copy-label">🔍 Google Ads — Headlines &amp; Descriptions</div>
+                <button class="btn btn-secondary btn-sm" onclick="MarketingKit.copy('mkit-google')">📋 Copy</button>
+              </div>
+              <textarea class="form-control mkit-textarea mkit-textarea-sm" id="mkit-google" readonly>${copy.googleAds}</textarea>
+            </div>
+
+            <div class="mkit-copy-block">
+              <div class="mkit-copy-header">
+                <div class="mkit-copy-label">📘 Meta (Facebook / Instagram) Ad Copy</div>
+                <button class="btn btn-secondary btn-sm" onclick="MarketingKit.copy('mkit-meta')">📋 Copy</button>
+              </div>
+              <textarea class="form-control mkit-textarea" id="mkit-meta" readonly>${copy.metaAds}</textarea>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="MarketingKit.close()">Close</button>
+        </div>
+      </div>`;
+
+    setTimeout(() => {
+      overlay.classList.add('open');
+      this.drawPoster(sub);
+    }, 10);
+  },
+
+  // ---- Copy generation (property name intentionally omitted — clients must contact us) ----
+  generateCopy(sub) {
+    const location  = sub.propertyLocation || '';
+    const type      = sub.listingType || 'For Sale';
+    const typeUpper = type === 'For Rent' ? 'FOR RENT' : type === 'For Sale' ? 'FOR SALE' : 'FOR SALE & RENT';
+    const price     = Number(sub.startingPrice || sub.listingPrice || 0);
+    const priceDisp = price
+      ? (sub.unitVariants && sub.unitVariants.length > 1 ? 'From KSh ' : 'KSh ') + price.toLocaleString('en-KE')
+      : '';
+    const unitTypes = sub.unitVariants && sub.unitVariants.length > 0
+      ? [...new Set(sub.unitVariants.map(v => v.unitType))].join(', ')
+      : (sub.propertySize || '');
+    const amenities = sub.amenities ? sub.amenities.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const notes     = (sub.fieldNotes || '').trim();
+    const phone     = sub.salespersonContact || '0726111133';
+    // Public headline — no property name
+    const headline  = unitTypes ? `${unitTypes} ${typeUpper} — ${location}, Nairobi`
+                                : `${typeUpper} — ${location}, Nairobi`;
+
+    // --- Buy Rent Kenya ---
+    const brkLines = [`${headline}`];
+    if (priceDisp)          brkLines.push(`PRICE: ${priceDisp}`);
+    if (unitTypes)          brkLines.push(`TYPE: ${unitTypes}`);
+    if (amenities.length)   brkLines.push(`AMENITIES: ${amenities.slice(0, 8).join(' | ')}`);
+    if (notes)              brkLines.push('', notes.slice(0, 600) + (notes.length > 600 ? '…' : ''));
+    brkLines.push(`\n📍 ${location}, Nairobi`, `📞 Contact: ${phone}`,
+      `Listed by Chestone Properties Ltd — 0726111133`,
+      `(Viewing by appointment. Property name disclosed on request.)`);
+    const buyRentKenya = brkLines.join('\n');
+
+    // --- Social media ---
+    const hashtagBase = '#ChestoneProperties #NairobiRealEstate #KenyaProperties';
+    const hashtagLoc  = '#' + location.replace(/\s+/g, '');
+    const hashtagType = type === 'For Rent' ? '#PropertyForRent #NairobiRentals' : '#PropertyForSale #BuyProperty';
+    const socialLines = [`🏠 ${headline}`];
+    if (priceDisp)        socialLines.push(`💰 ${priceDisp}`);
+    if (amenities.length) socialLines.push(`✅ ${amenities.slice(0, 4).join(' · ')}`);
+    if (notes)            socialLines.push('', notes.slice(0, 250) + (notes.length > 250 ? '…' : ''));
+    socialLines.push('', `📍 ${location}, Nairobi`,
+      `📞 Book a viewing: ${phone}`,
+      `🌐 chestoneproperties.co.ke`, '',
+      `${hashtagBase} ${hashtagType} ${hashtagLoc}`);
+    const social = socialLines.join('\n');
+
+    // --- Google Ads ---
+    const gh1 = (`${unitTypes || 'Property'} ${typeUpper}`).slice(0, 30);
+    const gh2 = (`${typeUpper} in ${location}`).slice(0, 30);
+    const gh3 = (priceDisp || 'Chestone Properties').slice(0, 30);
+    const gd1 = (`${unitTypes ? unitTypes + ' a' : 'A'}vailable in ${location}. ${amenities.slice(0, 2).join(', ')}.`).slice(0, 90);
+    const gd2 = (`Contact Chestone Properties. Call ${phone}. Structured property solutions.`).slice(0, 90);
+    const googleAds = [
+      `HEADLINE 1 (max 30 chars): ${gh1}`,
+      `HEADLINE 2 (max 30 chars): ${gh2}`,
+      `HEADLINE 3 (max 30 chars): ${gh3}`,
+      `DESCRIPTION 1 (max 90 chars): ${gd1}`,
+      `DESCRIPTION 2 (max 90 chars): ${gd2}`,
+      `FINAL URL: https://chestoneproperties.co.ke`,
+    ].join('\n');
+
+    // --- Meta Ads ---
+    const metaLines = [`🔑 ${headline}`, ''];
+    if (notes) {
+      metaLines.push(notes.slice(0, 400) + (notes.length > 400 ? '…' : ''), '');
+    } else {
+      metaLines.push(`Premium property available in ${location}, Nairobi.`, '');
+    }
+    if (priceDisp)        metaLines.push(`💰 Asking: ${priceDisp}`);
+    if (unitTypes)        metaLines.push(`🛏️ ${unitTypes}`);
+    if (amenities.length) metaLines.push(`✅ ${amenities.slice(0, 5).join(', ')}`);
+    metaLines.push('', `📍 ${location}, Nairobi`,
+      `📞 Call/WhatsApp: ${phone}`,
+      `🌐 chestoneproperties.co.ke`, '',
+      `👉 DM or call to book a viewing. Property name disclosed on enquiry.`);
+    const metaAds = metaLines.join('\n');
+
+    return { buyRentKenya, social, googleAds, metaAds };
+  },
+
+  // ---- Canvas poster drawing — layout adapts to photo count, no property name ----
+  async drawPoster(sub) {
+    const canvas = document.getElementById('mkit-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = 1080, H = 1080;
+    const NAVY = '#1a2744', GOLD = '#c9a84c', WHITE = '#ffffff';
+
+    const photos   = (sub.photos || []).filter(u => u.startsWith('http'));
+    const nPhotos  = photos.length;
+    const price    = Number(sub.startingPrice || sub.listingPrice || 0);
+    const priceDisp= price
+      ? (sub.unitVariants && sub.unitVariants.length > 1 ? 'From KSh ' : 'KSh ') + price.toLocaleString('en-KE')
+      : '';
+    const units    = sub.unitVariants && sub.unitVariants.length
+      ? [...new Set(sub.unitVariants.map(v => v.unitType))].join('  ·  ')
+      : (sub.propertySize || '');
+    const amenArr  = sub.amenities ? sub.amenities.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const typeLabel= sub.listingType === 'For Rent' ? 'FOR RENT'
+      : sub.listingType === 'For Sale' ? 'FOR SALE' : 'FOR SALE & RENT';
+
+    // ── BACKGROUND ────────────────────────────────────────────
+    ctx.fillStyle = WHITE;
+    ctx.fillRect(0, 0, W, H);
+    // Decorative corner accent
+    ctx.fillStyle = NAVY;
+    ctx.beginPath(); ctx.moveTo(W - 200, 0); ctx.lineTo(W, 0); ctx.lineTo(W, 200); ctx.closePath(); ctx.fill();
+
+    // ── HEADER (0–105) ────────────────────────────────────────
+    ctx.fillStyle = NAVY;
+    ctx.fillRect(0, 0, W, 105);
+    ctx.fillStyle = GOLD;
+    ctx.font = 'bold 38px Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('CHESTONE PROPERTIES LTD', W / 2, 56);
+    ctx.font = '17px Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.72)';
+    ctx.fillText('Structured Property Solutions', W / 2, 85);
+
+    // ── TYPE + PRICE BAND (105–157) ───────────────────────────
+    ctx.fillStyle = GOLD;
+    ctx.fillRect(0, 105, W, 52);
+    ctx.fillStyle = NAVY;
+    ctx.font = 'bold 26px Arial, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(typeLabel, 24, 141);
+    if (priceDisp) {
+      ctx.font = 'bold 22px Arial, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(priceDisp, W - 24, 141);
+    }
+
+    // ── COMPUTE PHOTO LAYOUT SLOTS ────────────────────────────
+    // Each slot: { x, y, w, h }
+    let slots = [];
+    const GAP = 4;
+    if (nPhotos >= 4) {
+      // 1 large + 3 equal thumbnails
+      slots = [
+        { x: 0,           y: 157, w: W,           h: 378 },
+        { x: 0,           y: 539, w: W/3 - GAP,   h: 148 },
+        { x: W/3 + GAP/2, y: 539, w: W/3 - GAP,   h: 148 },
+        { x: 2*W/3 + GAP, y: 539, w: W/3 - GAP,   h: 148 },
+      ];
+    } else if (nPhotos === 3) {
+      // 1 large + 2 side-by-side thumbnails
+      slots = [
+        { x: 0,         y: 157, w: W,         h: 378 },
+        { x: 0,         y: 539, w: W/2 - GAP, h: 148 },
+        { x: W/2 + GAP, y: 539, w: W/2 - GAP, h: 148 },
+      ];
+    } else if (nPhotos === 2) {
+      // 2 equal side-by-side (taller, more presence)
+      slots = [
+        { x: 0,         y: 157, w: W/2 - GAP, h: 440 },
+        { x: W/2 + GAP, y: 157, w: W/2 - GAP, h: 440 },
+      ];
+    } else if (nPhotos === 1) {
+      // Single full-width image
+      slots = [{ x: 0, y: 157, w: W, h: 440 }];
+    }
+    // nPhotos === 0 → no image area at all
+
+    const mediaBottom = slots.length > 0
+      ? Math.max(...slots.map(s => s.y + s.h)) + GAP
+      : 157;
+
+    // Draw placeholder backgrounds (while images load)
+    slots.forEach(s => {
+      ctx.fillStyle = '#ddd8cc';
+      ctx.fillRect(s.x, s.y, s.w, s.h);
+    });
+
+    // ── DETAILS SECTION (mediaBottom → 895) ──────────────────
+    const detY = mediaBottom;
+    const detH = 895 - detY;
+    ctx.fillStyle = WHITE;
+    ctx.fillRect(0, detY, W, detH);
+    ctx.fillStyle = GOLD;
+    ctx.fillRect(0, detY, 6, detH);
+
+    // For 0 photos: make location the hero
+    if (nPhotos === 0) {
+      ctx.fillStyle = NAVY;
+      ctx.font = 'bold 22px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('PRIME LOCATION', W / 2, detY + 55);
+      ctx.fillStyle = GOLD;
+      ctx.font = 'bold 58px Georgia, serif';
+      const loc = (sub.propertyLocation || '').toUpperCase();
+      ctx.fillText(loc.length > 16 ? loc.slice(0, 15) + '…' : loc, W / 2, detY + 130);
+      ctx.fillStyle = NAVY;
+      ctx.font = '20px Arial, sans-serif';
+      ctx.fillText('NAIROBI, KENYA', W / 2, detY + 170);
+      ctx.fillStyle = GOLD;
+      ctx.fillRect(W / 2 - 80, detY + 185, 160, 3);
+      if (units) {
+        ctx.fillStyle = '#444';
+        ctx.font = '20px Arial, sans-serif';
+        ctx.fillText('🛏️ ' + (units.length > 50 ? units.slice(0, 48) + '…' : units), W / 2, detY + 225);
+      }
+      if (amenArr.length) {
+        ctx.font = '17px Arial, sans-serif';
+        ctx.fillStyle = '#555';
+        const al = amenArr.slice(0, 5).join('  ·  ');
+        ctx.fillText('✅ ' + (al.length > 60 ? al.slice(0, 58) + '…' : al), W / 2, detY + 260);
+      }
+      ctx.textAlign = 'left';
+    } else {
+      // Normal layout: location prominent, no property name
+      ctx.fillStyle = NAVY;
+      ctx.font = 'bold 34px Georgia, serif';
+      ctx.textAlign = 'left';
+      const locFull = '📍 ' + (sub.propertyLocation || '').toUpperCase() + ', NAIROBI';
+      ctx.fillText(locFull.length > 36 ? locFull.slice(0, 34) + '…' : locFull, 28, detY + 46);
+
+      if (units) {
+        ctx.font = '21px Arial, sans-serif';
+        ctx.fillStyle = '#444';
+        ctx.fillText('🛏️ ' + (units.length > 58 ? units.slice(0, 56) + '…' : units), 28, detY + 84);
+      }
+      if (amenArr.length) {
+        ctx.font = '18px Arial, sans-serif';
+        ctx.fillStyle = '#555';
+        const al = amenArr.slice(0, 5).join('  ·  ');
+        ctx.fillText('✅ ' + (al.length > 64 ? al.slice(0, 62) + '…' : al), 28, detY + 118);
+      }
+      // Description snippet if space allows
+      const notes = (sub.fieldNotes || '').trim();
+      if (notes && detH > 165) {
+        ctx.font = 'italic 15px Georgia, serif';
+        ctx.fillStyle = '#888';
+        ctx.fillText(notes.slice(0, 95) + (notes.length > 95 ? '…' : ''), 28, detY + 152);
+      }
+      // Price right-aligned in details
+      if (priceDisp) {
+        ctx.fillStyle = NAVY;
+        ctx.font = 'bold 28px Georgia, serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(priceDisp, W - 28, detY + 46);
+      }
+    }
+
+    // ── FOOTER (895–1080) ─────────────────────────────────────
+    ctx.fillStyle = NAVY;
+    ctx.fillRect(0, 895, W, 185);
+    ctx.fillStyle = GOLD;
+    ctx.fillRect(0, 895, W, 4);
+    ctx.fillStyle = GOLD;
+    ctx.font = 'bold 44px Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('CALL US: 0726111133', W / 2, 963);
+    ctx.fillStyle = 'rgba(255,255,255,0.80)';
+    ctx.font = '19px Arial, sans-serif';
+    ctx.fillText('info@chestoneproperties.co.ke  |  chestoneproperties.co.ke', W / 2, 1005);
+    ctx.fillStyle = GOLD;
+    ctx.font = '15px Arial, sans-serif';
+    ctx.fillText('@chestoneproperties  ·  fb: Chestone Properties', W / 2, 1043);
+
+    // ── LOAD REAL PHOTOS INTO SLOTS ───────────────────────────
+    if (photos.length > 0 && slots.length > 0) {
+      await this._drawPhotos(ctx, photos, slots);
+    }
+  },
+
+  _drawPhotos(ctx, urls, slots) {
+    return new Promise(resolve => {
+      const toLoad = Math.min(urls.length, slots.length);
+      if (toLoad === 0) { resolve(); return; }
+      let done = 0;
+
+      const drawCover = (img, s) => {
+        const sAR = img.width / img.height, dAR = s.w / s.h;
+        let sx = 0, sy = 0, sw = img.width, sh = img.height;
+        if (sAR > dAR) { sw = sh * dAR; sx = (img.width - sw) / 2; }
+        else           { sh = sw / dAR; sy = (img.height - sh) / 2; }
+        ctx.drawImage(img, sx, sy, sw, sh, s.x, s.y, s.w, s.h);
+      };
+
+      for (let i = 0; i < toLoad; i++) {
+        const slot = slots[i];
+        const img  = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload  = () => { drawCover(img, slot); if (++done >= toLoad) resolve(); };
+        img.onerror = () => { if (++done >= toLoad) resolve(); };
+        img.src = urls[i];
+      }
+    });
+  },
+
+  async downloadPoster() {
+    await this.drawPoster(this._sub);
+    const canvas = document.getElementById('mkit-canvas');
+    if (!canvas) return;
+    try {
+      const a = document.createElement('a');
+      a.download = 'chestone-' + (this._sub.propertyLocation || 'property').replace(/[^a-z0-9]/gi, '-').toLowerCase() + '-poster.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    } catch (err) {
+      Toast.error('Export failed — your Cloudinary account may need CORS enabled for canvas export. Try downloading the poster without photos.');
+    }
+  },
+
+  copy(elId) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    copyToClipboard(el.value);
+    Toast.success('Copied to clipboard!');
+  },
+
+  toggleVideos() {
+    const el  = document.getElementById('mkit-video-links');
+    const btn = document.getElementById('mkit-vid-toggle');
+    if (!el) return;
+    const shown = el.style.display !== 'none';
+    el.style.display  = shown ? 'none' : 'block';
+    if (btn) btn.textContent = shown ? `🎥 Show Video Downloads (${(this._sub.videos || []).filter(u => u.startsWith('http')).length})` : '🎥 Hide Video Downloads';
+  },
+
+  close() {
+    document.getElementById('mkit-overlay')?.classList.remove('open');
+  },
+};
+
+// ============================
 // USER SETTINGS
 // ============================
 const UserSettings = {
@@ -285,20 +774,24 @@ const UserSettings = {
     const curr = document.getElementById('cpwd-current').value;
     const pwd1 = document.getElementById('cpwd-new').value;
     const pwd2 = document.getElementById('cpwd-confirm').value;
-    const btn = document.getElementById('cpwd-btn');
-    
-    if (pwd1 !== pwd2) return Toast.error('New passwords do not match.');
+    const btn  = document.getElementById('cpwd-btn');
+
+    if (pwd1 !== pwd2)  return Toast.error('New passwords do not match.');
     if (pwd1.length < 6) return Toast.error('Password must be at least 6 characters.');
-    
+
     const user = DB.getCurrentUser();
-    if (user.password !== curr) return Toast.error('Current password is incorrect.');
-    
-    btn.disabled = true; btn.textContent = 'Saving...';
+    // Verify current password (handles both hashed and legacy)
+    const ok = await verifyPassword(curr, user.password, user.passwordHashed === true);
+    if (!ok) return Toast.error('Current password is incorrect.');
+
+    btn.disabled = true; btn.textContent = 'Saving…';
     try {
-      await DB.updateUser(user.id, { password: pwd1 });
-      user.password = pwd1;
+      const hashed = await hashPassword(pwd1);
+      await DB.updateUser(user.id, { password: hashed, passwordHashed: true });
+      user.password = hashed;
+      user.passwordHashed = true;
       DB.setCurrentUser(user);
-      Toast.success('Password changed successfully!');
+      Toast.success('Password changed successfully! 🔐');
       document.getElementById('pwd-modal-overlay').classList.remove('open');
     } catch (err) {
       Toast.error('Failed to update password.');
@@ -357,13 +850,15 @@ const LoginPage = {
           <div class="login-card">
             <div class="login-tabs">
               <button class="login-tab active" id="tab-login" onclick="LoginPage.switchTab('login')">Sign In</button>
-              <button class="login-tab" id="tab-reset" onclick="LoginPage.switchTab('reset')">Get Help</button>
+              <button class="login-tab" id="tab-reset" onclick="LoginPage.switchTab('reset')">Forgot Password</button>
             </div>
+
+            <!-- Sign In panel -->
             <div id="login-panel">
               <form id="login-form" onsubmit="LoginPage.handleLogin(event)">
                 <div class="form-group">
                   <label class="form-label" for="login-email">Email Address</label>
-                  <input id="login-email" type="email" class="form-control" placeholder="you@cheston.co.ke" required autocomplete="email" />
+                  <input id="login-email" type="email" class="form-control" placeholder="you@chestone.co.ke" required autocomplete="email" />
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="login-password">Password</label>
@@ -374,15 +869,65 @@ const LoginPage = {
                 </div>
                 <button type="submit" id="login-btn" class="btn btn-primary btn-full btn-lg" style="margin-top:8px">Sign In</button>
               </form>
+              <p style="text-align:center;margin-top:14px;font-size:0.78rem;color:var(--text-muted)">Forgot your password? <button onclick="LoginPage.switchTab('reset')" style="background:none;border:none;color:var(--navy);font-weight:600;cursor:pointer;font-size:0.78rem">Reset it →</button></p>
             </div>
+
+            <!-- Forgot Password panel (3 steps) -->
             <div id="reset-panel" style="display:none">
-              <div style="text-align:center;padding:20px 0;">
-                <div style="font-size:2.5rem;margin-bottom:16px">🤝</div>
-                <h3 style="margin-bottom:8px;font-size:1rem;color:var(--navy)">Need Access?</h3>
-                <p style="color:var(--text-muted);font-size:0.85rem;line-height:1.6">Your account must be created by the admin. Contact your manager to get your login credentials.</p>
-                <div style="margin-top:20px;padding:14px;background:var(--gold-light);border:1px solid rgba(201,168,76,0.3);border-radius:8px;font-size:0.8rem;color:var(--navy)">
-                  📧 Contact: admin@cheston.co.ke
+              <!-- Step 1: Enter email -->
+              <div id="fp-step-1">
+                <div style="text-align:center;padding:12px 0 20px">
+                  <div style="font-size:2.2rem;margin-bottom:10px">🔐</div>
+                  <h3 style="font-size:1rem;color:var(--navy);margin-bottom:6px">Reset Your Password</h3>
+                  <p style="color:var(--text-muted);font-size:0.82rem">Enter your email to receive a 6-digit reset code.</p>
                 </div>
+                <form id="fp-email-form" onsubmit="LoginPage.handleForgotPassword(event)">
+                  <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="fp-email" class="form-control" placeholder="you@chestone.co.ke" required />
+                  </div>
+                  <button type="submit" class="btn btn-primary btn-full" id="fp-email-btn">Send Reset Code</button>
+                </form>
+                <p style="text-align:center;margin-top:14px;font-size:0.78rem;color:var(--text-muted)">No account? Contact <strong>admin@chestone.co.ke</strong></p>
+              </div>
+              <!-- Step 2: Enter OTP -->
+              <div id="fp-step-2" style="display:none">
+                <div style="text-align:center;padding:12px 0 20px">
+                  <div style="font-size:2.2rem;margin-bottom:10px">📬</div>
+                  <h3 style="font-size:1rem;color:var(--navy);margin-bottom:6px">Check Your Email</h3>
+                  <p style="color:var(--text-muted);font-size:0.82rem">Enter the 6-digit code sent to <strong id="fp-email-display"></strong></p>
+                </div>
+                <form id="fp-otp-form" onsubmit="LoginPage.handleVerifyOTP(event)">
+                  <div class="form-group">
+                    <label class="form-label">Reset Code</label>
+                    <input type="text" id="fp-otp" class="form-control" placeholder="000000" maxlength="6" required
+                      style="text-align:center;letter-spacing:8px;font-size:1.5rem;font-weight:700" />
+                  </div>
+                  <button type="submit" class="btn btn-primary btn-full" id="fp-otp-btn">Verify Code</button>
+                  <button type="button" class="btn btn-secondary btn-full" style="margin-top:8px" onclick="LoginPage.showFPStep(1)">← Back</button>
+                </form>
+              </div>
+              <!-- Step 3: New password -->
+              <div id="fp-step-3" style="display:none">
+                <div style="text-align:center;padding:12px 0 20px">
+                  <div style="font-size:2.2rem;margin-bottom:10px">🔑</div>
+                  <h3 style="font-size:1rem;color:var(--navy);margin-bottom:6px">Set New Password</h3>
+                  <p style="color:var(--text-muted);font-size:0.82rem">Choose a new password for your account.</p>
+                </div>
+                <form id="fp-newpwd-form" onsubmit="LoginPage.handleResetPassword(event)">
+                  <div class="form-group">
+                    <label class="form-label">New Password</label>
+                    <div class="password-wrapper">
+                      <input type="password" id="fp-newpwd" class="form-control" placeholder="Min 6 characters" required minlength="6" />
+                      <button type="button" class="password-toggle" onclick="LoginPage.togglePassword('fp-newpwd',this)">👁️</button>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" id="fp-confirmpwd" class="form-control" placeholder="Repeat password" required />
+                  </div>
+                  <button type="submit" class="btn btn-primary btn-full" id="fp-save-btn">Save New Password</button>
+                </form>
               </div>
             </div>
           </div>
@@ -390,11 +935,22 @@ const LoginPage = {
       </div>`);
   },
 
+  resetEmail:  '',
+  resetUserId: '',
+
   switchTab(tab) {
     document.getElementById('tab-login').classList.toggle('active', tab === 'login');
     document.getElementById('tab-reset').classList.toggle('active', tab === 'reset');
     document.getElementById('login-panel').style.display = tab === 'login' ? 'block' : 'none';
     document.getElementById('reset-panel').style.display = tab === 'reset' ? 'block' : 'none';
+    if (tab === 'reset') this.showFPStep(1);
+  },
+
+  showFPStep(step) {
+    [1, 2, 3].forEach(s => {
+      const el = document.getElementById(`fp-step-${s}`);
+      if (el) el.style.display = s === step ? 'block' : 'none';
+    });
   },
 
   togglePassword(inputId, btn) {
@@ -405,19 +961,31 @@ const LoginPage = {
 
   async handleLogin(e) {
     e.preventDefault();
-    const email = document.getElementById('login-email').value.trim();
+    const email    = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
-    const btn = document.getElementById('login-btn');
+    const btn      = document.getElementById('login-btn');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Signing in…';
 
     try {
       const user = await DB.getUserByEmail(email);
       if (!user) { Toast.error('No account found with this email.'); btn.disabled = false; btn.textContent = 'Sign In'; return; }
-      if (user.password !== password) { Toast.error('Incorrect password. Please try again.'); btn.disabled = false; btn.textContent = 'Sign In'; return; }
+
+      // Verify password (supports both hashed and legacy plain-text)
+      const ok = await verifyPassword(password, user.password, user.passwordHashed === true);
+      if (!ok) { Toast.error('Incorrect password. Please try again.'); btn.disabled = false; btn.textContent = 'Sign In'; return; }
       if (user.status !== 'active') { Toast.error('Your account has been deactivated. Contact admin.'); btn.disabled = false; btn.textContent = 'Sign In'; return; }
+
+      // Auto-migrate: hash plain-text password on first login
+      if (!user.passwordHashed) {
+        const hashed = await hashPassword(password);
+        await DB.updateUser(user.id, { password: hashed, passwordHashed: true }).catch(() => {});
+        user.password = hashed;
+        user.passwordHashed = true;
+      }
+
       DB.setCurrentUser(user);
-      Toast.success(`Welcome back, ${user.name}! 👋`);
+      Toast.success(`Welcome back, ${sanitize(user.name)}! 👋`);
       if (user.role === 'admin') Router.go('admin');
       else Router.go('salesperson');
     } catch (err) {
@@ -425,6 +993,77 @@ const LoginPage = {
       Toast.error('Connection error. Check your internet and try again.');
       btn.disabled = false; btn.textContent = 'Sign In';
     }
+  },
+
+  async handleForgotPassword(e) {
+    e.preventDefault();
+    const email = document.getElementById('fp-email').value.trim();
+    const btn   = document.getElementById('fp-email-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Sending…';
+    try {
+      const result = await DB.createPasswordReset(email);
+      if (!result) {
+        Toast.error('No account found with this email.');
+        btn.disabled = false; btn.textContent = 'Send Reset Code'; return;
+      }
+      this.resetEmail = email;
+
+      if (EMAILJS_CONFIGURED) {
+        await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
+          to_email: email,
+          to_name:  result.user.name,
+          otp_code: result.otp,
+        }, EMAILJS_CONFIG.publicKey);
+        Toast.success('Reset code sent! Check your email.');
+      } else {
+        // EmailJS not set up yet — show code on screen (dev mode)
+        Toast.info(`Dev mode — code is: ${result.otp}`, 10000);
+      }
+
+      const disp = document.getElementById('fp-email-display');
+      if (disp) disp.textContent = email;
+      this.showFPStep(2);
+    } catch (err) {
+      Toast.error('Failed to send reset code. Try again.');
+    }
+    btn.disabled = false; btn.textContent = 'Send Reset Code';
+  },
+
+  async handleVerifyOTP(e) {
+    e.preventDefault();
+    const otp = document.getElementById('fp-otp').value.trim();
+    const btn = document.getElementById('fp-otp-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Verifying…';
+    try {
+      const result = await DB.verifyPasswordReset(this.resetEmail, otp);
+      if (!result.success) { Toast.error(result.error); btn.disabled = false; btn.textContent = 'Verify Code'; return; }
+      this.resetUserId = result.user.id;
+      this.showFPStep(3);
+    } catch (err) {
+      Toast.error('Verification failed. Try again.');
+    }
+    btn.disabled = false; btn.textContent = 'Verify Code';
+  },
+
+  async handleResetPassword(e) {
+    e.preventDefault();
+    const pwd1 = document.getElementById('fp-newpwd').value;
+    const pwd2 = document.getElementById('fp-confirmpwd').value;
+    if (pwd1 !== pwd2) { Toast.error('Passwords do not match.'); return; }
+    if (pwd1.length < 6) { Toast.error('Password must be at least 6 characters.'); return; }
+    const btn = document.getElementById('fp-save-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving…';
+    try {
+      const hashed = await hashPassword(pwd1);
+      await DB.updateUser(this.resetUserId, { password: hashed, passwordHashed: true });
+      await DB.clearPasswordReset(this.resetUserId);
+      Toast.success('Password reset! Please sign in with your new password.');
+      this.resetEmail = ''; this.resetUserId = '';
+      this.switchTab('login');
+    } catch (err) {
+      Toast.error('Failed to save new password. Try again.');
+    }
+    btn.disabled = false; btn.textContent = 'Save New Password';
   },
 };
 
@@ -462,7 +1101,7 @@ const AdminDashboard = {
             <div class="nav-user">
               <div class="nav-avatar">${getInitials(user.name)}</div>
               <div>
-                <div class="nav-user-name">${user.name}</div>
+                <div class="nav-user-name">${sanitize(user.name)}</div>
                 <div class="nav-user-role"><span class="badge badge-admin" style="padding:1px 6px;font-size:0.65rem">Admin</span></div>
               </div>
             </div>
@@ -573,9 +1212,9 @@ const AdminDashboard = {
                 <tbody>
                   ${recent.map(s => `
                     <tr>
-                      <td><div class="td-name">${s.propertyTitle}</div><div class="td-secondary">📍 ${s.propertyLocation}</div></td>
-                      <td>${s.salespersonName}</td>
-                      <td><span class="badge ${listingBadgeClass(s.listingType)}">${s.listingType}</span></td>
+                      <td><div class="td-name">${sanitize(s.propertyTitle)}</div><div class="td-secondary">📍 ${sanitize(s.propertyLocation)}</div></td>
+                      <td>${sanitize(s.salespersonName)}</td>
+                      <td><span class="badge ${listingBadgeClass(s.listingType)}">${sanitize(s.listingType)}</span></td>
                       <td class="td-price">${s.unitVariants && s.unitVariants.length > 0 ? 'From ' + formatCurrency(s.startingPrice) : formatCurrency(s.listingPrice || s.startingPrice)}</td>
                       <td style="color:var(--text-muted);font-size:0.8rem">${formatDate(s.createdAt)}</td>
                       <td><button class="btn btn-secondary btn-sm" onclick="AdminDashboard.viewSubmission('${s.id}')">View</button></td>
@@ -614,18 +1253,19 @@ const AdminDashboard = {
               <tbody>
                 ${users.map(u => `
                   <tr>
-                    <td><div style="display:flex;align-items:center;gap:10px"><div class="nav-avatar" style="width:36px;height:36px;font-size:13px;flex-shrink:0">${getInitials(u.name)}</div><div class="td-name">${u.name}</div></div></td>
+                    <td><div style="display:flex;align-items:center;gap:10px"><div class="nav-avatar" style="width:36px;height:36px;font-size:13px;flex-shrink:0">${getInitials(u.name)}</div><div class="td-name">${sanitize(u.name)}</div></div></td>
                     <td><span class="badge ${u.role === 'admin' ? 'badge-admin' : 'badge-rent'}">${u.role === 'admin' ? 'Admin' : 'Salesperson'}</span></td>
-                    <td style="font-size:0.82rem">${u.email}</td>
-                    <td style="font-size:0.82rem">${u.phone || '—'}</td>
+                    <td style="font-size:0.82rem">${sanitize(u.email)}</td>
+                    <td style="font-size:0.82rem">${sanitize(u.phone || '—')}</td>
                     <td>
                       <div style="display:flex;align-items:center;gap:4px">
-                        <span class="password-cell" id="pwd-${u.id}">••••••••</span>
-                        <button class="copy-btn" onclick="AdminDashboard.togglePwd('${u.id}','${u.password}')" title="Show">👁️</button>
-                        <button class="copy-btn" onclick="copyToClipboard('${u.password}');Toast.success('Copied!')" title="Copy">📋</button>
+                        ${u.passwordHashed
+                          ? `<span style="font-size:0.72rem;color:var(--success);background:var(--success-light);padding:2px 8px;border-radius:100px">🔐 Hashed</span>`
+                          : `<span style="font-size:0.72rem;color:var(--warning);background:var(--warning-light);padding:2px 8px;border-radius:100px">⚠️ Plain-text — ask user to reset password</span>`
+                        }
                       </div>
                     </td>
-                    <td><span class="badge badge-${u.status}">${u.status}</span></td>
+                    <td><span class="badge badge-${u.status}">${sanitize(u.status)}</span></td>
                     <td>
                       <div class="account-row-actions">
                         <button class="btn btn-secondary btn-sm" onclick="AdminDashboard.editUser('${u.id}')">Edit</button>
@@ -658,7 +1298,7 @@ const AdminDashboard = {
                 </div>
               </div>
               <div class="form-row">
-                <div class="form-group"><label class="form-label">Email Address <span class="required">*</span></label><input type="email" id="user-email" class="form-control" placeholder="jane@cheston.co.ke" required /></div>
+                <div class="form-group"><label class="form-label">Email Address <span class="required">*</span></label><input type="email" id="user-email" class="form-control" placeholder="jane@chestone.co.ke" required /></div>
                 <div class="form-group"><label class="form-label">Phone Number</label><input type="tel" id="user-phone" class="form-control" placeholder="+254700000000" /></div>
               </div>
               <div class="form-group">
@@ -693,7 +1333,7 @@ const AdminDashboard = {
           </div>
           <select class="form-control" id="filter-agent" onchange="AdminDashboard.filterUI()" style="width:auto;min-width:180px">
             <option value="">All Agents</option>
-            ${users.map(u => `<option value="${u.id}">${u.name}</option>`).join('')}
+            ${users.map(u => `<option value="${u.id}">${sanitize(u.name)}</option>`).join('')}
           </select>
           <select class="form-control" id="filter-type" onchange="AdminDashboard.filterUI()" style="width:auto;min-width:150px">
             <option value="">All Types</option>
@@ -720,17 +1360,17 @@ const AdminDashboard = {
           return `
             <div class="property-card">
               <div class="property-card-header">
-                <div><div class="property-title">${s.propertyTitle}</div><div class="property-location">📍 ${s.propertyLocation}</div></div>
-                <span class="badge ${listingBadgeClass(s.listingType)}">${s.listingType}</span>
+                <div><div class="property-title">${sanitize(s.propertyTitle)}</div><div class="property-location">📍 ${sanitize(s.propertyLocation)}</div></div>
+                <span class="badge ${listingBadgeClass(s.listingType)}">${sanitize(s.listingType)}</span>
               </div>
-              ${thumb ? `<div style="height:160px;overflow:hidden;cursor:pointer" onclick="LightboxViewer.open(${JSON.stringify(s.photos.filter(u=>u.startsWith('http')))},0)"><img src="${thumb}" alt="${s.propertyTitle}" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
+              ${thumb ? `<div style="height:160px;overflow:hidden;cursor:pointer" onclick="LightboxViewer.open(${JSON.stringify(s.photos.filter(u=>u.startsWith('http')))},0)"><img src="${thumb}" alt="${sanitize(s.propertyTitle)}" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
               <div class="property-card-body">
-                <div class="property-detail"><span class="property-detail-icon">🛏️</span>${unitSummary || 'N/A'}</div>
-                <div class="property-detail"><span class="property-detail-icon">🌟</span>${s.amenities || 'N/A'}</div>
-                ${s.fieldNotes ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:8px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${s.fieldNotes}</div>` : ''}
+                <div class="property-detail"><span class="property-detail-icon">🛏️</span>${sanitize(unitSummary || 'N/A')}</div>
+                <div class="property-detail"><span class="property-detail-icon">🌟</span>${sanitize(s.amenities || 'N/A')}</div>
+                ${s.fieldNotes ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:8px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${sanitize(s.fieldNotes)}</div>` : ''}
               </div>
               <div class="property-card-footer">
-                <div><div class="property-price">${dispPrice}</div><div class="property-agent">👤 ${s.salespersonName} · ${formatDate(s.createdAt)}</div></div>
+                <div><div class="property-price">${dispPrice}</div><div class="property-agent">👤 ${sanitize(s.salespersonName)} · ${formatDate(s.createdAt)}</div></div>
                 <div style="display:flex;gap:6px">
                   <button class="btn btn-secondary btn-sm" onclick="AdminDashboard.viewSubmission('${s.id}')">View</button>
                   <button class="btn btn-danger btn-sm" onclick="AdminDashboard.deleteSubmission('${s.id}')">🗑️</button>
@@ -776,15 +1416,20 @@ const AdminDashboard = {
 
     const gallery = (urls, type) => {
       if (!urls || urls.length === 0) return '';
+      const httpList    = urls.filter(u => u.startsWith('http'));
+      const pendingList = urls.filter(u => !u.startsWith('http'));
+      if (httpList.length === 0 && pendingList.length === 0) return '';
       return `
         <div style="margin-bottom:16px">
-          <div class="detail-label" style="margin-bottom:8px">${type === 'photo' ? `Photos (${urls.length})` : `Videos (${urls.length})`}</div>
+          <div class="detail-label" style="margin-bottom:8px">${type === 'photo' ? `📸 Photos (${urls.length})` : `🎥 Videos (${urls.length})`}</div>
           <div class="photo-grid">
-            ${urls.map((url, idx) => url.startsWith('http')
-              ? (type === 'photo'
-                  ? `<div class="photo-thumb lightbox-trigger" onclick="LightboxViewer.open(${JSON.stringify(photoUrls)},${idx})" title="Click to enlarge"><img src="${url}" alt="" /><div class="photo-thumb-overlay">🔍</div></div>`
-                  : `<div class="photo-thumb lightbox-trigger" onclick="LightboxViewer.open(${JSON.stringify(videoUrls)},${idx})" title="Click to enlarge"><video src="${url}" style="width:100%;height:100%;object-fit:cover"></video><div class="photo-thumb-overlay">▶</div></div>`)
-              : `<div class="photo-thumb">${type === 'photo' ? '🖼️' : '🎥'}<br><span style="font-size:0.6rem;color:var(--text-muted)">${url.replace('pending_upload://', '')}</span></div>`
+            ${httpList.map((url, idx) =>
+              type === 'photo'
+                ? `<div class="photo-thumb lightbox-trigger" onclick="LightboxViewer.open(${JSON.stringify(httpList)},${idx})" title="Click to enlarge"><img src="${url}" alt="" loading="lazy" /><div class="photo-thumb-overlay">🔍</div></div>`
+                : `<div class="photo-thumb lightbox-trigger" onclick="LightboxViewer.open(${JSON.stringify(httpList)},${idx})" title="Click to play"><video src="${url}" preload="metadata" style="width:100%;height:100%;object-fit:cover"></video><div class="photo-thumb-overlay">▶</div></div>`
+            ).join('')}
+            ${pendingList.map(url =>
+              `<div class="photo-thumb" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:1.4rem;background:var(--bg-primary)">${type === 'photo' ? '🖼️' : '🎥'}<span style="font-size:0.6rem;color:var(--text-muted);text-align:center;padding:0 4px">${url.replace('pending_upload://', '')}</span></div>`
             ).join('')}
           </div>
         </div>`;
@@ -800,11 +1445,11 @@ const AdminDashboard = {
             <tbody>
               ${sub.unitVariants.map(v => `
                 <tr>
-                  <td><strong>${v.unitType}</strong></td>
-                  <td>${v.size || '—'}</td>
+                  <td><strong>${sanitize(v.unitType)}</strong></td>
+                  <td>${sanitize(v.size || '—')}</td>
                   <td style="color:var(--navy);font-weight:600">${formatCurrency(v.price)}</td>
-                  <td>${v.floorRange || '—'}</td>
-                  <td>${v.quantity || '—'}</td>
+                  <td>${sanitize(v.floorRange || '—')}</td>
+                  <td>${sanitize(v.quantity || '—')}</td>
                 </tr>`).join('')}
             </tbody>
           </table>
@@ -820,20 +1465,20 @@ const AdminDashboard = {
     overlay.innerHTML = `
       <div class="modal" style="max-width:760px">
         <div class="modal-header">
-          <h3 class="modal-title">🏠 ${sub.propertyTitle}</h3>
+          <h3 class="modal-title">🏠 ${sanitize(sub.propertyTitle)}</h3>
           <button class="modal-close" onclick="document.getElementById('detail-modal-overlay').classList.remove('open')">✕</button>
         </div>
         <div class="detail-grid">
-          <div class="detail-item"><div class="detail-label">Agent</div><div class="detail-value">👤 ${sub.salespersonName}</div></div>
-          <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value">📞 ${sub.salespersonContact}</div></div>
-          <div class="detail-item"><div class="detail-label">Location</div><div class="detail-value">📍 ${sub.propertyLocation}</div></div>
-          <div class="detail-item"><div class="detail-label">Listing Type</div><div class="detail-value"><span class="badge ${listingBadgeClass(sub.listingType)}">${sub.listingType}</span></div></div>
+          <div class="detail-item"><div class="detail-label">Agent</div><div class="detail-value">👤 ${sanitize(sub.salespersonName)}</div></div>
+          <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value">📞 ${sanitize(sub.salespersonContact)}</div></div>
+          <div class="detail-item"><div class="detail-label">Location</div><div class="detail-value">📍 ${sanitize(sub.propertyLocation)}</div></div>
+          <div class="detail-item"><div class="detail-label">Listing Type</div><div class="detail-value"><span class="badge ${listingBadgeClass(sub.listingType)}">${sanitize(sub.listingType)}</span></div></div>
           ${legacyPriceHtml}
-          <div class="detail-item"><div class="detail-label">Amenities</div><div class="detail-value">${sub.amenities || 'None listed'}</div></div>
+          <div class="detail-item"><div class="detail-label">Amenities</div><div class="detail-value">${sanitize(sub.amenities || 'None listed')}</div></div>
           <div class="detail-item"><div class="detail-label">Submitted</div><div class="detail-value">${formatDateTime(sub.createdAt)}</div></div>
         </div>
         ${variantsHtml}
-        ${sub.fieldNotes ? `<div style="margin-bottom:20px"><div class="detail-label" style="margin-bottom:8px">Field Notes & Description</div><div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:0.875rem;line-height:1.7;color:var(--text-secondary)">${sub.fieldNotes}</div></div>` : ''}
+        ${sub.fieldNotes ? `<div style="margin-bottom:20px"><div class="detail-label" style="margin-bottom:8px">Field Notes & Description</div><div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:0.875rem;line-height:1.7;color:var(--text-secondary);white-space:pre-wrap">${sanitize(sub.fieldNotes)}</div></div>` : ''}
         ${gallery(sub.photos, 'photo')}
         ${gallery(sub.videos, 'video')}
         ${sub.documents && sub.documents.length > 0 ? `
@@ -846,8 +1491,10 @@ const AdminDashboard = {
                 </a>`).join('')}
             </div>
           </div>` : ''}
+        <script type="application/json" id="detail-sub-json">${JSON.stringify(sub).replace(/<\/script/gi, '<\\/script')}<\/script>
         <div class="modal-footer">
           <button class="btn btn-danger" onclick="AdminDashboard.deleteSubmission('${sub.id}')">🗑️ Delete</button>
+          <button class="btn btn-primary" onclick="MarketingKit.open(JSON.parse(document.getElementById('detail-sub-json').textContent))">📊 Marketing Kit</button>
           <button class="btn btn-secondary" onclick="document.getElementById('detail-modal-overlay').classList.remove('open')">Close</button>
         </div>
       </div>`;
@@ -897,8 +1544,15 @@ const AdminDashboard = {
         Toast.error('An account with this email already exists.');
         btn.disabled = false; btn.textContent = editId ? 'Save Changes' : 'Create Account'; return;
       }
-      if (editId) { await DB.updateUser(editId, { name, email, phone, password, role }); Toast.success('Account updated!'); }
-      else { await DB.addUser({ name, email, phone, password, role, status: 'active' }); Toast.success(`Account created for ${name}! 🎉`); }
+      // Always store a hashed password
+      const hashed = await hashPassword(password);
+      if (editId) {
+        await DB.updateUser(editId, { name, email, phone, role, password: hashed, passwordHashed: true });
+        Toast.success('Account updated!');
+      } else {
+        await DB.addUser({ name, email, phone, role, status: 'active', password: hashed, passwordHashed: true });
+        Toast.success(`Account created for ${name}! 🎉`);
+      }
       this.closeModal('add-user-modal');
       this.showSection('accounts');
     } catch (err) {
@@ -924,20 +1578,30 @@ const AdminDashboard = {
     } catch (e) { Toast.error('Failed to update status.'); }
   },
 
-  async deleteUser(id) {
-    if (!confirm('Delete this user account? Their submissions will remain.')) return;
-    try { await DB.deleteUser(id); Toast.success('Account deleted.'); this.showSection('accounts'); }
-    catch (e) { Toast.error('Failed to delete.'); }
+  deleteUser(id) {
+    ConfirmModal.show(
+      'Delete this user account? Their submissions will remain.',
+      async () => {
+        try { await DB.deleteUser(id); Toast.success('Account deleted.'); this.showSection('accounts'); }
+        catch (e) { Toast.error('Failed to delete.'); }
+      },
+      { title: 'Delete User', confirmLabel: 'Delete' }
+    );
   },
 
-  async deleteSubmission(id) {
-    if (!confirm('Delete this property submission?')) return;
-    try {
-      await DB.deleteSubmission(id);
-      document.getElementById('detail-modal-overlay')?.classList.remove('open');
-      Toast.success('Submission deleted.');
-      this.showSection('submissions');
-    } catch (e) { Toast.error('Failed to delete.'); }
+  deleteSubmission(id) {
+    ConfirmModal.show(
+      'Permanently delete this property submission? This cannot be undone.',
+      async () => {
+        try {
+          await DB.deleteSubmission(id);
+          document.getElementById('detail-modal-overlay')?.classList.remove('open');
+          Toast.success('Submission deleted.');
+          this.showSection('submissions');
+        } catch (e) { Toast.error('Failed to delete.'); }
+      },
+      { title: 'Delete Submission', confirmLabel: 'Delete' }
+    );
   },
 };
 
@@ -975,7 +1639,7 @@ const SalespersonDashboard = {
           <div class="nav-actions">
             <div class="nav-user">
               <div class="nav-avatar">${getInitials(user.name)}</div>
-              <div><div class="nav-user-name">${user.name}</div><div class="nav-user-role" style="color:var(--success);font-size:0.7rem">● Salesperson</div></div>
+              <div><div class="nav-user-name">${sanitize(user.name)}</div><div class="nav-user-role" style="color:var(--success);font-size:0.7rem">● Salesperson</div></div>
             </div>
             <button class="btn btn-secondary btn-sm" onclick="UserSettings.openChangePasswordModal()">🔑 Change Password</button>
             <button class="btn btn-secondary btn-sm" data-action="logout">🚪 Logout</button>
@@ -1047,7 +1711,7 @@ const SalespersonDashboard = {
     return `
       <div>
         <div class="section-header">
-          <div><h2 class="section-title">Welcome, ${user.name}! 👋</h2><p class="section-subtitle">Manage your property listings and submissions.</p></div>
+          <div><h2 class="section-title">Welcome, ${sanitize(user.name)}! 👋</h2><p class="section-subtitle">Manage your property listings and submissions.</p></div>
           <button class="btn btn-primary" onclick="SalespersonDashboard.showSection('submit')">➕ Submit Property</button>
         </div>
         <div class="stats-grid">
@@ -1071,8 +1735,8 @@ const SalespersonDashboard = {
                 return `
                   <div class="property-card">
                     <div class="property-card-header">
-                      <div><div class="property-title">${s.propertyTitle}</div><div class="property-location">📍 ${s.propertyLocation}</div></div>
-                      <span class="badge ${listingBadgeClass(s.listingType)}">${s.listingType}</span>
+                      <div><div class="property-title">${sanitize(s.propertyTitle)}</div><div class="property-location">📍 ${sanitize(s.propertyLocation)}</div></div>
+                      <span class="badge ${listingBadgeClass(s.listingType)}">${sanitize(s.listingType)}</span>
                     </div>
                     ${thumb ? `<div style="height:120px;overflow:hidden"><img src="${thumb}" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
                     <div class="property-card-footer">
@@ -1115,16 +1779,17 @@ const SalespersonDashboard = {
               return `
                 <div class="property-card">
                   <div class="property-card-header">
-                    <div><div class="property-title">${s.propertyTitle}</div><div class="property-location">📍 ${s.propertyLocation}</div></div>
-                    <span class="badge ${listingBadgeClass(s.listingType)}">${s.listingType}</span>
+                    <div><div class="property-title">${sanitize(s.propertyTitle)}</div><div class="property-location">📍 ${sanitize(s.propertyLocation)}</div></div>
+                    <span class="badge ${listingBadgeClass(s.listingType)}">${sanitize(s.listingType)}</span>
                   </div>
                   ${thumb ? `<div style="height:160px;overflow:hidden"><img src="${thumb}" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
                   <div class="property-card-body">
-                    <div class="property-detail"><span class="property-detail-icon">🛏️</span>${unitSummary || 'N/A'}</div>
-                    <div class="property-detail"><span class="property-detail-icon">🌟</span>${s.amenities || 'N/A'}</div>
+                    <div class="property-detail"><span class="property-detail-icon">🛏️</span>${sanitize(unitSummary || 'N/A')}</div>
+                    <div class="property-detail"><span class="property-detail-icon">🌟</span>${sanitize(s.amenities || 'N/A')}</div>
                   </div>
                   <div class="property-card-footer">
-                    <div><div class="property-price">${dispPrice}</div><div class="property-agent">${formatDate(s.createdAt)}</div></div>
+                    <div><div class="property-price">${dispPrice}</div><div class="property-agent">${formatDate(s.createdAt)}${s.updatedAt ? ' • ✏️ edited' : ''}</div></div>
+                    <button class="btn btn-secondary btn-sm" onclick="PropertyForm.openEdit('${s.id}')">✏️ Edit</button>
                   </div>
                 </div>`;
             }).join('')}
@@ -1142,6 +1807,13 @@ const PropertyForm = {
   selectedDocs:      [],
   selectedAmenities: [],
   unitVariants:      [],   // [{unitType, size, price, floorRange, quantity}]
+  // --- edit mode ---
+  editMode:          false,
+  editSubmissionId:  null,
+  _editData:         null,
+  existingPhotos:    [],
+  existingVideos:    [],
+  existingDocs:      [],
 
   render() {
     const user = DB.getCurrentUser();
@@ -1284,7 +1956,7 @@ const PropertyForm = {
           </div>
 
           <div style="display:flex;justify-content:flex-end;gap:12px;padding-bottom:40px">
-            <button type="button" class="btn btn-secondary btn-lg" onclick="if(confirm('Clear the form?')){document.getElementById('property-form').reset();PropertyForm.init();}">Reset</button>
+            <button type="button" class="btn btn-secondary btn-lg" onclick="ConfirmModal.show('Clear all form data and start over?',()=>{PropertyForm.editMode=false;PropertyForm.editSubmissionId=null;PropertyForm._editData=null;PropertyForm.existingPhotos=[];PropertyForm.existingVideos=[];PropertyForm.existingDocs=[];document.getElementById('property-form').reset();PropertyForm.init();},{title:'Reset Form',confirmLabel:'Clear',confirmClass:'btn-secondary'})">Reset</button>
             <button type="submit" id="submit-btn" class="btn btn-primary btn-lg">🚀 Submit Listing</button>
           </div>
         </form>
@@ -1317,8 +1989,119 @@ const PropertyForm = {
     });
     const ci = document.getElementById('amenity-custom-input');
     if (ci) ci.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); PropertyForm.addCustomAmenity(); } });
-    // Add first variant row automatically
-    this.addVariantRow();
+
+    if (this.editMode && this._editData) {
+      this._prefillEdit();
+    } else {
+      // Add first blank row for a new submission
+      this.addVariantRow();
+    }
+  },
+
+  // ----------------------------------------------------------
+  // EDIT SUBMISSION
+  // ----------------------------------------------------------
+  async openEdit(submissionId) {
+    Toast.info('Loading submission…');
+    try {
+      const sub = await DB.getSubmissionById(submissionId);
+      if (!sub) { Toast.error('Could not load submission.'); return; }
+      this.editMode         = true;
+      this.editSubmissionId = submissionId;
+      this._editData        = sub;
+      this.existingPhotos   = (sub.photos    || []).filter(u => u.startsWith('http'));
+      this.existingVideos   = (sub.videos    || []).filter(u => u.startsWith('http'));
+      this.existingDocs     = (sub.documents || []).filter(u => u.startsWith('http'));
+      SalespersonDashboard.showSection('submit');
+    } catch (err) {
+      Toast.error('Failed to open editor: ' + err.message);
+    }
+  },
+
+  _prefillEdit() {
+    const sub = this._editData;
+
+    // --- text fields ---
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+    set('prop-title',    sub.propertyTitle);
+    set('prop-location', sub.propertyLocation);
+    set('listing-type',  sub.listingType);
+    set('field-notes',   sub.fieldNotes);
+    set('sp-contact',    sub.salespersonContact);
+
+    // --- unit variants ---
+    if (sub.unitVariants && sub.unitVariants.length > 0) {
+      sub.unitVariants.forEach((v, idx) => {
+        this.unitVariants.push(v);
+        this.addVariantRowFromData(idx, v);
+      });
+    } else {
+      this.addVariantRow(); // legacy fallback
+    }
+
+    // --- amenities ---
+    if (sub.amenities) {
+      sub.amenities.split(', ').forEach(a => {
+        const name = a.trim();
+        if (!name) return;
+        const chip = document.querySelector(`[data-amenity="${CSS.escape(name)}"]`);
+        if (chip) { this.selectedAmenities.push(name); chip.classList.add('active'); }
+        else {
+          this.selectedAmenities.push(name);
+          const chips = document.getElementById('amenities-chips');
+          if (chips) {
+            const btn = document.createElement('button');
+            btn.type = 'button'; btn.className = 'amenity-chip active custom-amenity';
+            btn.dataset.amenity = name; btn.textContent = name;
+            btn.onclick = () => PropertyForm.toggleAmenity(name, btn);
+            chips.appendChild(btn);
+          }
+        }
+      });
+      this.renderSelectedAmenities();
+    }
+
+    // --- existing media ---
+    this.renderExistingMedia();
+
+    // --- UI labels ---
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) submitBtn.innerHTML = '✏️ Update Listing';
+    const title = document.querySelector('.section-title');
+    if (title) title.textContent = 'Edit Property Listing';
+    const sub2 = document.querySelector('.section-subtitle');
+    if (sub2) sub2.textContent = 'Update the property details below.';
+  },
+
+  renderExistingMedia() {
+    const types = [
+      { key: 'existingPhotos', type: 'photos',  containerId: 'photos-list' },
+      { key: 'existingVideos', type: 'videos',  containerId: 'videos-list' },
+      { key: 'existingDocs',   type: 'docs',    containerId: 'docs-list'   },
+    ];
+    types.forEach(({ key, type, containerId }) => {
+      const arr       = this[key];
+      const container = document.getElementById(containerId);
+      if (!container || !arr || arr.length === 0) return;
+      const html = arr.map((url, i) => `
+        <div class="file-item" id="existing-${type}-${i}">
+          ${type === 'photos'
+            ? `<img src="${url}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1.5px solid var(--border)" />`
+            : type === 'videos'
+              ? `<video src="${url}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0"></video>`
+              : '<span style="font-size:1.4rem">📄</span>'}
+          <span style="flex:1;font-size:0.78rem;color:var(--success)">☁️ Uploaded to Cloudinary</span>
+          <button class="file-remove" type="button" onclick="PropertyForm.removeExisting('${type}',${i})">✕</button>
+        </div>`);
+      container.innerHTML = html.join('');
+    });
+  },
+
+  removeExisting(type, index) {
+    const key = type === 'photos' ? 'existingPhotos' : type === 'videos' ? 'existingVideos' : 'existingDocs';
+    this[key].splice(index, 1);
+    this.renderExistingMedia();
+    Toast.info('Removed from list. Save the form to confirm.');
   },
 
   // ----------------------------------------------------------
@@ -1484,13 +2267,20 @@ const PropertyForm = {
     if (!display) return;
     if (this.selectedAmenities.length === 0) { display.innerHTML = ''; return; }
     display.innerHTML = `<span class="amenities-count">✅ ${this.selectedAmenities.length} selected: </span>` +
-      this.selectedAmenities.map(a => `<span class="amenity-tag">${a}</span>`).join('');
+      this.selectedAmenities.map(a => `<span class="amenity-tag">${sanitize(a)}</span>`).join('');
   },
 
   handleFiles(type, fileList) {
-    const key = `selected${type.charAt(0).toUpperCase() + type.slice(1)}`;
+    const key    = `selected${type.charAt(0).toUpperCase() + type.slice(1)}`;
+    const limits = { photos: 10, videos: 500, docs: 10 }; // MB per file
+    const maxMB  = limits[type] || 10;
     this[key] = this[key] || [];
     Array.from(fileList).forEach(f => {
+      const sizeMB = f.size / 1024 / 1024;
+      if (sizeMB > maxMB) {
+        Toast.error(`"${sanitize(f.name)}" is ${sizeMB.toFixed(1)} MB — exceeds the ${maxMB} MB limit and was skipped.`);
+        return;
+      }
       if (!this[key].find(x => x.name === f.name)) this[key].push(f);
     });
     this.renderFileList(type);
@@ -1557,6 +2347,9 @@ const PropertyForm = {
     // Build a human-readable summary for propertySize (backward compat)
     const sizeSummary   = [...new Set(variants.map(v => v.unitType))].join(', ');
 
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<span class="spinner"></span> Processing…'; }
+
     const overlay = document.getElementById('submit-overlay');
     const msgEl   = document.getElementById('submit-overlay-msg');
     const fillEl  = document.getElementById('submit-progress-fill');
@@ -1570,22 +2363,27 @@ const PropertyForm = {
     try {
       const user  = DB.getCurrentUser();
       const total = this.selectedPhotos.length + this.selectedVideos.length + this.selectedDocs.length;
-      let photoUrls = [], videoUrls = [], docUrls = [];
+      let newPhotoUrls = [], newVideoUrls = [], newDocUrls = [];
 
       if (total > 0) {
         if (msgEl) msgEl.textContent = 'Uploading media to Cloudinary…';
         const urls = await CloudinaryUploader.uploadAll(
           this.selectedPhotos, this.selectedVideos, this.selectedDocs, setProgress
         );
-        photoUrls = urls.photos;
-        videoUrls = urls.videos;
-        docUrls   = urls.documents;
+        newPhotoUrls = urls.photos;
+        newVideoUrls = urls.videos;
+        newDocUrls   = urls.documents;
       }
 
       if (msgEl) msgEl.textContent = 'Saving to database…';
       if (fillEl) fillEl.style.width = '90%';
 
-      await DB.addSubmission({
+      // Merge existing media with newly uploaded media
+      const finalPhotos = [...(this.editMode ? this.existingPhotos : []), ...newPhotoUrls];
+      const finalVideos = [...(this.editMode ? this.existingVideos : []), ...newVideoUrls];
+      const finalDocs   = [...(this.editMode ? this.existingDocs   : []), ...newDocUrls];
+
+      const payload = {
         salespersonId:      user.id,
         salespersonName:    user.name,
         salespersonContact: contact.value.trim(),
@@ -1598,21 +2396,37 @@ const PropertyForm = {
         listingPrice:       startingPrice,        // kept for backward compat
         amenities:          this.selectedAmenities.join(', '),
         fieldNotes:         document.getElementById('field-notes').value.trim(),
-        photos:             photoUrls,
-        videos:             videoUrls,
-        documents:          docUrls,
-      });
+        photos:             finalPhotos,
+        videos:             finalVideos,
+        documents:          finalDocs,
+      };
+
+      if (this.editMode && this.editSubmissionId) {
+        await DB.updateSubmission(this.editSubmissionId, payload);
+      } else {
+        await DB.addSubmission(payload);
+      }
 
       if (fillEl) fillEl.style.width = '100%';
       setTimeout(() => {
         overlay.classList.remove('show');
-        Toast.success('Property submitted successfully! 🎉');
+        Toast.success(this.editMode ? 'Property updated successfully! 🎉' : 'Property submitted successfully! 🎉');
+        
+        // Reset edit state
+        this.editMode = false;
+        this.editSubmissionId = null;
+        this._editData = null;
+        this.existingPhotos = [];
+        this.existingVideos = [];
+        this.existingDocs = [];
+        
         SalespersonDashboard.showSection('my-submissions');
       }, 400);
 
     } catch (err) {
       console.error('Submission error:', err);
       overlay.classList.remove('show');
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = this.editMode ? '✏️ Update Listing' : '🚀 Submit Listing'; }
       Toast.error(`Failed to submit: ${err.message}`);
     }
   },

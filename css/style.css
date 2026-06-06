@@ -375,12 +375,15 @@ select.form-control option { background: #fff; color: var(--text-primary); }
 }
 .file-item .file-remove:hover { color: var(--danger); }
 
-/* Camera capture buttons */
+/* Camera capture buttons — hidden on non-touch devices, visible on mobile */
 .camera-capture-row {
-  display: flex;
+  display: none;
   gap: 10px;
   margin-top: 10px;
   flex-wrap: wrap;
+}
+@media (hover: none) and (pointer: coarse) {
+  .camera-capture-row { display: flex; }
 }
 .btn-capture {
   display: inline-flex;
@@ -1201,12 +1204,6 @@ select.form-control option { background: #fff; color: var(--text-primary); }
 /* ===========================
    CAMERA CAPTURE BUTTON
    =========================== */
-.camera-capture-row {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-}
 .btn-capture {
   display: inline-flex;
   align-items: center;
@@ -1394,4 +1391,87 @@ select.form-control option { background: #fff; color: var(--text-primary); }
 @media (max-width: 768px) {
   .variant-row-inner { flex-direction: column; }
   .variant-row-inner > div { width: 100% !important; min-width: 0 !important; }
+}
+
+/* ============================================================
+   MARKETING KIT MODAL
+   ============================================================ */
+.mkit-modal {
+  max-width: 820px;
+  max-height: 92vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.mkit-body {
+  padding: 0 24px 8px;
+  flex: 1;
+}
+.mkit-section {
+  margin-bottom: 30px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.mkit-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+.mkit-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--gold-light);
+}
+.mkit-poster-wrap {
+  display: flex;
+  justify-content: center;
+  background: var(--bg-primary);
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+.mkit-poster-wrap canvas {
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  display: block;
+}
+.mkit-copy-block {
+  margin-bottom: 18px;
+}
+.mkit-copy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+.mkit-copy-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.mkit-textarea {
+  min-height: 110px;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  resize: vertical;
+  font-family: inherit;
+  white-space: pre-wrap;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+}
+.mkit-textarea-sm {
+  min-height: 75px;
+}
+
+@media (max-width: 600px) {
+  .mkit-modal { max-height: 100vh; border-radius: 0; }
+  .mkit-poster-wrap canvas { max-width: 100%; }
 }

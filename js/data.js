@@ -18,16 +18,19 @@ const DB = {
       
       if (!snap.exists()) {
         const adminId = 'admin-001';
+        // SHA-256('Admin@123::cheston2024:salt') — pre-computed; matches hashPassword() in app.js
+        const defaultHash = 'b520882bb14dd74fe323b6d7878cd3dd40df6fe2eead9009fbeecff088eb9838';
         await db.ref(this.PATHS.USERS + '/' + adminId).set({
-          id:        adminId,
-          name:      'Admin',
-          email:     'admin@cheston.co.ke',
-          password:  'Admin@123',
-          role:      'admin',
-          phone:     '+254700000000',
-          status:    'active',
-          createdAt: new Date().toISOString(),
-          lastLogin: null,
+          id:             adminId,
+          name:           'Admin',
+          email:          'admin@cheston.co.ke',
+          password:       defaultHash,
+          passwordHashed: true,
+          role:           'admin',
+          phone:          '+254700000000',
+          status:         'active',
+          createdAt:      new Date().toISOString(),
+          lastLogin:      null,
         });
         console.log('✅ Default admin created in Realtime DB.');
       }
@@ -141,6 +144,44 @@ const DB = {
       const key = Object.keys(data)[0];
       await db.ref(this.PATHS.SUBMISSIONS + '/' + key).remove();
     }
+  },
+
+  async updateSubmission(id, updates) {
+    const snap = await db.ref(this.PATHS.SUBMISSIONS).orderByChild('id').equalTo(id).limitToFirst(1).once('value');
+    if (!snap.exists()) return null;
+    const data = snap.val();
+    const key  = Object.keys(data)[0];
+    updates.updatedAt = new Date().toISOString();
+    await db.ref(this.PATHS.SUBMISSIONS + '/' + key).update(updates);
+    return { ...data[key], ...updates };
+  },
+
+  // ----------------------------------------------------------
+  // PASSWORD RESET — OTP flow
+  // ----------------------------------------------------------
+  async createPasswordReset(email) {
+    const user = await this.getUserByEmail(email);
+    if (!user) return null;
+    const otp    = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 min
+    // Store a hash of the OTP — not the OTP itself
+    const otpHash = await hashPassword(otp);
+    await this.updateUser(user.id, { resetOTP: otpHash, resetExpiry: expiry });
+    return { otp, user }; // return plain OTP for sending via email
+  },
+
+  async verifyPasswordReset(email, otp) {
+    const user = await this.getUserByEmail(email);
+    if (!user) return { success: false, error: 'No account found with this email.' };
+    if (!user.resetOTP || !user.resetExpiry) return { success: false, error: 'No reset code found. Please request a new one.' };
+    if (new Date() > new Date(user.resetExpiry)) return { success: false, error: 'Reset code expired. Please request a new one.' };
+    const otpHash = await hashPassword(otp);
+    if (user.resetOTP !== otpHash) return { success: false, error: 'Invalid reset code.' };
+    return { success: true, user };
+  },
+
+  async clearPasswordReset(userId) {
+    await this.updateUser(userId, { resetOTP: null, resetExpiry: null });
   },
 
   // ----------------------------------------------------------
