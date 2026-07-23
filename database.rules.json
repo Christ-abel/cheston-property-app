@@ -1,0 +1,24 @@
+{
+  "rules": {
+    "cheston_users": {
+      ".read": true,
+      ".write": false,
+      "$uid": {
+        ".write": true,
+        ".validate": "newData.hasChildren(['id', 'name', 'email', 'role', 'status']) || !newData.exists()"
+      }
+    },
+    "cheston_submissions": {
+      ".read": true,
+      ".write": false,
+      "$sid": {
+        ".write": true,
+        ".validate": "newData.hasChildren(['id', 'salespersonId', 'propertyTitle', 'propertyLocation', 'listingType']) || !newData.exists()"
+      }
+    },
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}

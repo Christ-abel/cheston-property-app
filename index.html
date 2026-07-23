@@ -4,36 +4,161 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chestone Properties — Onboarding System</title>
+  <title>Chestone Properties — Nairobi Property Management &amp; Listings</title>
   <meta name="description"
-    content="Internal Property Onboarding System - Admin and Salesperson portal for listing property submissions." />
-  <!-- Security headers -->
+    content="Chestone Properties connects landlords, salespeople, and tenants across Nairobi's top neighbourhoods — Kileleshwa, Lavington, Kilimani, Westlands, Riverside and Karen." />
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-  <meta http-equiv="X-Frame-Options" content="DENY" />
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
-  <!-- Robots: keep internal tool out of search engines -->
-  <meta name="robots" content="noindex, nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/marketing.css" />
 </head>
 
 <body>
-  <div id="app"></div>
 
-  <!-- ✅ Firebase v9 Compat SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <nav class="site-nav">
+    <div class="wrap">
+      <a href="#top" class="brand">
+        <img src="chestone%20%20logo.jpeg" alt="Chestone Properties logo" />
+        <div>
+          <span class="brand-name">Chestone Properties</span>
+          <span class="brand-sub">Nairobi Real Estate</span>
+        </div>
+      </a>
+      <div class="nav-links">
+        <a href="#about">About</a>
+        <a href="#services">Services</a>
+        <a href="#locations">Locations</a>
+        <a href="app.html" class="btn-login">Staff Login</a>
+      </div>
+    </div>
+  </nav>
 
-  <!-- ✅ EmailJS — for password reset emails (no backend needed) -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <header class="hero" id="top">
+    <div class="eyebrow">Nairobi · Kenya</div>
+    <h1>Property listings and management, handled properly.</h1>
+    <p>
+      Chestone Properties works with landlords and salespeople across Nairobi's
+      leading neighbourhoods to list, market, and manage residential and
+      commercial properties end to end.
+    </p>
+    <div class="cta-row">
+      <a href="#services" class="btn-gold-solid">Our Services</a>
+      <a href="app.html" class="btn-outline-light">Staff Portal</a>
+    </div>
+  </header>
 
-  <!-- App scripts — ORDER MATTERS -->
-  <script src="js/config.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/app.js"></script>
+  <section class="about" id="about">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">About Us</span>
+        <h2>Built around the details that get a listing rented or sold</h2>
+        <p>
+          From onboarding a property to preparing marketing-ready photos and
+          copy, our team manages the full lifecycle of every listing we take on.
+        </p>
+      </div>
+      <div class="about-grid">
+        <div class="stat-card">
+          <div class="num">6</div>
+          <div class="label">Nairobi neighbourhoods covered</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">14</div>
+          <div class="label">Property &amp; unit types supported</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">End-to-end</div>
+          <div class="label">From onboarding to marketing-ready listing</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="services" id="services">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">What We Do</span>
+        <h2>Services for landlords and salespeople</h2>
+        <p>Everything a property needs between "for sale/rent" and a signed tenant or buyer.</p>
+      </div>
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="icon">&#127968;</div>
+          <h3>Property Onboarding</h3>
+          <p>Structured intake of unit variants, pricing, amenities, and agent details for every listing.</p>
+        </div>
+        <div class="service-card">
+          <div class="icon">&#128247;</div>
+          <h3>Media &amp; Marketing Kits</h3>
+          <p>Watermarked photos and video, plus ready-to-post copy for property portals and social ads.</p>
+        </div>
+        <div class="service-card">
+          <div class="icon">&#128101;</div>
+          <h3>Agent Coordination</h3>
+          <p>Salespeople submit and track their own listings; admins review, manage, and publish.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="locations" id="locations">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Coverage</span>
+        <h2>Where we operate</h2>
+        <p>Currently active across Nairobi's key residential and commercial areas.</p>
+      </div>
+      <div class="location-pills">
+        <span>Kileleshwa</span>
+        <span>Lavington</span>
+        <span>Kilimani</span>
+        <span>Westlands</span>
+        <span>Riverside</span>
+        <span>Karen</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="wrap">
+      <h2>Have a property to list?</h2>
+      <p>Get in touch and our team will walk you through onboarding it.</p>
+      <a href="mailto:info@cheston.co.ke" class="btn-gold-solid">Contact Us</a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div class="foot-brand">
+          <img src="chestone%20%20logo.jpeg" alt="Chestone Properties logo" />
+          <span>Chestone Properties</span>
+        </div>
+        <p>Property listings and management across Nairobi.</p>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <div class="foot-links">
+          <a href="#about">About</a>
+          <a href="#services">Services</a>
+          <a href="#locations">Locations</a>
+        </div>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <div class="foot-links">
+          <a href="mailto:info@cheston.co.ke">info@cheston.co.ke</a>
+          <a href="tel:+254700000000">+254 700 000 000</a>
+          <a href="app.html">Staff Login →</a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">&copy; 2026 Chestone Properties. All rights reserved.</div>
+  </footer>
+
 </body>
 
 </html>

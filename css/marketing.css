@@ -1,0 +1,163 @@
+/* ============================================================
+   css/marketing.css — Public marketing site for Chestone Properties
+   ============================================================ */
+
+:root {
+  --navy:       #0D2B55;
+  --navy-deep:  #091e3e;
+  --navy-light: #E8EFF7;
+  --gold:       #C9A84C;
+  --gold-light: #F5EDD6;
+  --gold-hover: #b8942e;
+  --ink:        #1c2733;
+  --muted:      #5b6b80;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--ink);
+  background: #fff;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; color: inherit; }
+img { max-width: 100%; display: block; }
+section { padding: 5rem 1.5rem; }
+.wrap { max-width: 1100px; margin: 0 auto; }
+
+/* ---------- Nav ---------- */
+.site-nav {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--navy);
+  border-bottom: 3px solid var(--gold);
+}
+.site-nav .wrap {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.5rem;
+}
+.site-nav .brand { display: flex; align-items: center; gap: 0.65rem; }
+.site-nav .brand img { height: 38px; width: 38px; border-radius: 8px; object-fit: cover; }
+.site-nav .brand-name { color: #fff; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.2px; }
+.site-nav .brand-sub { color: var(--gold); font-size: 0.68rem; display: block; font-weight: 400; }
+.site-nav .nav-links { display: flex; align-items: center; gap: 1.75rem; }
+.site-nav .nav-links a:not(.btn-login) { color: var(--navy-light); font-size: 0.92rem; opacity: 0.9; }
+.site-nav .nav-links a:not(.btn-login):hover { opacity: 1; color: var(--gold); }
+.btn-login {
+  background: var(--gold); color: var(--navy); font-weight: 700;
+  padding: 0.55rem 1.2rem; border-radius: 8px; font-size: 0.9rem;
+  border: 2px solid var(--gold);
+}
+.btn-login:hover { background: var(--gold-hover); border-color: var(--gold-hover); }
+
+/* ---------- Hero ---------- */
+.hero {
+  background: linear-gradient(160deg, var(--navy) 0%, var(--navy-deep) 100%);
+  color: #fff;
+  padding: 6rem 1.5rem 5rem;
+  text-align: center;
+}
+.hero .eyebrow {
+  color: var(--gold); font-weight: 600; letter-spacing: 1.5px;
+  text-transform: uppercase; font-size: 0.8rem; margin-bottom: 1rem;
+}
+.hero h1 {
+  font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800;
+  max-width: 780px; margin: 0 auto 1.25rem; line-height: 1.15;
+}
+.hero p {
+  max-width: 620px; margin: 0 auto 2.25rem;
+  color: var(--navy-light); font-size: 1.05rem; opacity: 0.9;
+}
+.hero .cta-row { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+.btn-gold-solid {
+  background: var(--gold); color: var(--navy); font-weight: 700;
+  padding: 0.85rem 1.75rem; border-radius: 10px; font-size: 0.98rem;
+  border: 2px solid var(--gold);
+}
+.btn-gold-solid:hover { background: var(--gold-hover); border-color: var(--gold-hover); }
+.btn-outline-light {
+  background: transparent; color: #fff; font-weight: 600;
+  padding: 0.85rem 1.75rem; border-radius: 10px; font-size: 0.98rem;
+  border: 2px solid rgba(255,255,255,0.4);
+}
+.btn-outline-light:hover { border-color: #fff; }
+
+/* ---------- Section headers ---------- */
+.section-head { text-align: center; max-width: 640px; margin: 0 auto 3rem; }
+.section-head .eyebrow {
+  color: var(--gold-hover); font-weight: 700; letter-spacing: 1.2px;
+  text-transform: uppercase; font-size: 0.78rem; margin-bottom: 0.6rem; display: block;
+}
+.section-head h2 { font-size: clamp(1.6rem, 3.5vw, 2.2rem); color: var(--navy); font-weight: 800; margin-bottom: 0.75rem; }
+.section-head p { color: var(--muted); font-size: 1rem; }
+
+/* ---------- About / stats ---------- */
+.about { background: #fff; }
+.about-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+.stat-card {
+  background: var(--navy-light); border-radius: 14px; padding: 2rem 1.5rem; text-align: center;
+  border: 1px solid rgba(13,43,85,0.08);
+}
+.stat-card .num { font-size: 2.1rem; font-weight: 800; color: var(--navy); }
+.stat-card .label { color: var(--muted); font-size: 0.9rem; margin-top: 0.35rem; }
+
+/* ---------- Services ---------- */
+.services { background: var(--gold-light); }
+.services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+.service-card {
+  background: #fff; border-radius: 14px; padding: 2rem 1.75rem;
+  border-top: 4px solid var(--gold); box-shadow: 0 8px 24px rgba(13,43,85,0.06);
+}
+.service-card .icon {
+  width: 46px; height: 46px; border-radius: 10px; background: var(--navy);
+  color: var(--gold); display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; margin-bottom: 1rem;
+}
+.service-card h3 { color: var(--navy); font-size: 1.1rem; margin-bottom: 0.5rem; }
+.service-card p { color: var(--muted); font-size: 0.92rem; }
+
+/* ---------- Locations ---------- */
+.locations { background: #fff; }
+.location-pills { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+.location-pills span {
+  background: var(--navy-light); color: var(--navy); font-weight: 600;
+  padding: 0.6rem 1.3rem; border-radius: 999px; font-size: 0.92rem;
+  border: 1px solid rgba(13,43,85,0.1);
+}
+
+/* ---------- CTA band ---------- */
+.cta-band {
+  background: var(--navy); color: #fff; text-align: center;
+  border-top: 3px solid var(--gold); border-bottom: 3px solid var(--gold);
+}
+.cta-band h2 { font-size: 1.7rem; font-weight: 800; margin-bottom: 0.75rem; }
+.cta-band p { color: var(--navy-light); opacity: 0.85; margin-bottom: 1.75rem; }
+
+/* ---------- Footer ---------- */
+footer { background: var(--navy-deep); color: var(--navy-light); padding: 3rem 1.5rem 2rem; }
+.footer-grid {
+  display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 2rem;
+  max-width: 1100px; margin: 0 auto 2rem;
+}
+footer h4 { color: #fff; font-size: 0.95rem; margin-bottom: 0.9rem; }
+footer p, footer a { color: var(--navy-light); opacity: 0.8; font-size: 0.9rem; }
+footer .foot-links { display: flex; flex-direction: column; gap: 0.5rem; }
+footer a:hover { opacity: 1; color: var(--gold); }
+.foot-brand { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem; }
+.foot-brand img { height: 34px; width: 34px; border-radius: 7px; }
+.foot-brand span { color: #fff; font-weight: 700; }
+.foot-bottom {
+  max-width: 1100px; margin: 0 auto; padding-top: 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.82rem; opacity: 0.65; text-align: center;
+}
+
+@media (max-width: 860px) {
+  .about-grid, .services-grid { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .site-nav .nav-links { gap: 1rem; }
+  .site-nav .nav-links a:not(.btn-login) { display: none; }
+}
