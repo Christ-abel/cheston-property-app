@@ -21,7 +21,7 @@ function renderSetupScreen() {
     <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy);padding:40px 24px">
       <div style="background:#fff;border-radius:18px;padding:40px;max-width:600px;width:100%;border-top:4px solid var(--gold)">
         <div style="text-align:center;margin-bottom:28px">
-          <div style="font-size:3rem;margin-bottom:12px">⚙️</div>
+          
           <h2 style="color:var(--navy);font-size:1.4rem;margin-bottom:8px">Firebase Setup Required</h2>
           <p style="color:var(--text-secondary);font-size:0.9rem">Open <strong>js/config.js</strong> and fill in your credentials to get started.</p>
         </div>
@@ -35,7 +35,7 @@ function renderSetupScreen() {
           6️⃣  Paste all values into <code>js/config.js</code> → Refresh
         </div>
         <div style="margin-top:20px;padding:14px;background:var(--gold-light);border-radius:8px;font-size:0.8rem;color:var(--navy);text-align:center">
-          📄 Full guide is in the <strong>walkthrough artifact</strong> in your IDE.
+          Full guide is in the <strong>walkthrough artifact</strong> in your IDE.
         </div>
       </div>
     </div>`;
@@ -260,11 +260,11 @@ const Toast = {
   },
   show(message, type = 'info', duration = 3500) {
     this.init();
-    const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+    
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.innerHTML = `
-      <span class="toast-icon">${icons[type] || 'ℹ️'}</span>
+      
       <span>${message}</span>
       <button class="toast-close" onclick="this.parentElement.remove()">✕</button>`;
     this.container.appendChild(toast);
@@ -294,7 +294,7 @@ const ConfirmModal = {
     overlay.innerHTML = `
       <div class="modal" style="max-width:400px">
         <div class="modal-header">
-          <h3 class="modal-title">⚠️ ${sanitize(title)}</h3>
+          <h3 class="modal-title">${sanitize(title)}</h3>
         </div>
         <div style="padding:16px 24px 0;color:var(--text-secondary);font-size:0.9rem;line-height:1.6">${sanitize(message)}</div>
         <div class="modal-footer">
@@ -333,32 +333,31 @@ const MarketingKit = {
     overlay.innerHTML = `
       <div class="modal mkit-modal">
         <div class="modal-header">
-          <h3 class="modal-title">📊 Marketing Kit — ${sanitize(sub.propertyLocation)} · ${sanitize(sub.listingType)}</h3>
+          <h3 class="modal-title">Marketing Kit — ${sanitize(sub.propertyLocation)} · ${sanitize(sub.listingType)}</h3>
           <button class="modal-close" onclick="MarketingKit.close()">✕</button>
         </div>
         <div class="mkit-body">
 
           <!-- POSTER -->
           <div class="mkit-section">
-            <div class="mkit-section-title">🖼️ Property Poster</div>
+            <div class="mkit-section-title">Property Poster</div>
             <p class="form-hint" style="margin-bottom:10px">Generated from the listing data. Click Download to save as PNG (1080×1080, ready for social media).</p>
             <div class="mkit-poster-wrap">
               <canvas id="mkit-canvas" width="1080" height="1080"></canvas>
             </div>
             <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-              <button class="btn btn-primary" onclick="MarketingKit.downloadPoster()">⬇️ Download Poster PNG</button>
-              ${videoUrls.length > 0 ? `<button class="btn btn-secondary" id="mkit-vid-toggle" onclick="MarketingKit.toggleVideos()">🎥 Show Video Downloads (${videoUrls.length})</button>` : ''}
+              <button class="btn btn-primary" onclick="MarketingKit.downloadPoster()">Download Poster PNG</button>
+              ${videoUrls.length > 0 ? `<button class="btn btn-secondary" id="mkit-vid-toggle" onclick="MarketingKit.toggleVideos()">Show Video Downloads (${videoUrls.length})</button>` : ''}
             </div>
             ${videoUrls.length > 0 ? `
               <div id="mkit-video-links" style="display:none;margin-top:14px;padding:14px;background:var(--bg-primary);border-radius:8px;border:1px solid var(--border)">
                 <div class="mkit-copy-label" style="margin-bottom:10px">Video files — right-click → Save As, or tap Download</div>
                 ${videoUrls.map((url, i) => `
                   <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-                    <a href="${url}" download target="_blank" class="btn btn-secondary btn-sm">⬇️ Video ${i + 1}</a>
+                    <a href="${url}" download target="_blank" class="btn btn-secondary btn-sm">Video ${i + 1}</a>
                     <span style="font-size:0.72rem;color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${url}</span>
                   </div>`).join('')}
                 <div class="info-box" style="margin-top:10px">
-                  <span class="info-icon">💡</span>
                   <span>To automatically brand videos with your logo, open <strong>cloudinary.com → Settings → Upload Presets</strong> → your unsigned preset, and add a logo overlay transformation.</span>
                 </div>
               </div>` : ''}
@@ -366,36 +365,36 @@ const MarketingKit = {
 
           <!-- MARKETING COPY -->
           <div class="mkit-section">
-            <div class="mkit-section-title">📝 Marketing Copy</div>
+            <div class="mkit-section-title">Marketing Copy</div>
 
             <div class="mkit-copy-block">
               <div class="mkit-copy-header">
-                <div class="mkit-copy-label">🏘️ Buy Rent Kenya — Listing Description</div>
-                <button class="btn btn-secondary btn-sm" onclick="MarketingKit.copy('mkit-brk')">📋 Copy</button>
+                <div class="mkit-copy-label">Buy Rent Kenya — Listing Description</div>
+                <button class="btn btn-secondary btn-sm" onclick="MarketingKit.copy('mkit-brk')">Copy</button>
               </div>
               <textarea class="form-control mkit-textarea" id="mkit-brk" readonly>${copy.buyRentKenya}</textarea>
             </div>
 
             <div class="mkit-copy-block">
               <div class="mkit-copy-header">
-                <div class="mkit-copy-label">📱 Instagram / Facebook Caption</div>
-                <button class="btn btn-secondary btn-sm" onclick="MarketingKit.copy('mkit-social')">📋 Copy</button>
+                <div class="mkit-copy-label">Instagram / Facebook Caption</div>
+                <button class="btn btn-secondary btn-sm" onclick="MarketingKit.copy('mkit-social')">Copy</button>
               </div>
               <textarea class="form-control mkit-textarea" id="mkit-social" readonly>${copy.social}</textarea>
             </div>
 
             <div class="mkit-copy-block">
               <div class="mkit-copy-header">
-                <div class="mkit-copy-label">🔍 Google Ads — Headlines &amp; Descriptions</div>
-                <button class="btn btn-secondary btn-sm" onclick="MarketingKit.copy('mkit-google')">📋 Copy</button>
+                <div class="mkit-copy-label">Google Ads — Headlines &amp; Descriptions</div>
+                <button class="btn btn-secondary btn-sm" onclick="MarketingKit.copy('mkit-google')">Copy</button>
               </div>
               <textarea class="form-control mkit-textarea mkit-textarea-sm" id="mkit-google" readonly>${copy.googleAds}</textarea>
             </div>
 
             <div class="mkit-copy-block">
               <div class="mkit-copy-header">
-                <div class="mkit-copy-label">📘 Meta (Facebook / Instagram) Ad Copy</div>
-                <button class="btn btn-secondary btn-sm" onclick="MarketingKit.copy('mkit-meta')">📋 Copy</button>
+                <div class="mkit-copy-label">Meta (Facebook / Instagram) Ad Copy</div>
+                <button class="btn btn-secondary btn-sm" onclick="MarketingKit.copy('mkit-meta')">Copy</button>
               </div>
               <textarea class="form-control mkit-textarea" id="mkit-meta" readonly>${copy.metaAds}</textarea>
             </div>
@@ -438,7 +437,7 @@ const MarketingKit = {
     if (unitTypes)          brkLines.push(`TYPE: ${unitTypes}`);
     if (amenities.length)   brkLines.push(`AMENITIES: ${amenities.slice(0, 8).join(' | ')}`);
     if (notes)              brkLines.push('', notes.slice(0, 600) + (notes.length > 600 ? '…' : ''));
-    brkLines.push(`\n📍 ${location}, Nairobi`, `📞 Contact: ${phone}`,
+    brkLines.push(`\n${location}, Nairobi`, `Contact: ${phone}`,
       `Listed by Real Estate Company — +254 712 345 678`,
       `(Viewing by appointment. Property name disclosed on request.)`);
     const buyRentKenya = brkLines.join('\n');
@@ -447,13 +446,13 @@ const MarketingKit = {
     const hashtagBase = '#RealEstateCompany #NairobiRealEstate #KenyaProperties';
     const hashtagLoc  = '#' + location.replace(/\s+/g, '');
     const hashtagType = type === 'For Rent' ? '#PropertyForRent #NairobiRentals' : '#PropertyForSale #BuyProperty';
-    const socialLines = [`🏠 ${headline}`];
-    if (priceDisp)        socialLines.push(`💰 ${priceDisp}`);
-    if (amenities.length) socialLines.push(`✅ ${amenities.slice(0, 4).join(' · ')}`);
+    const socialLines = [`${headline}`];
+    if (priceDisp)        socialLines.push(`${priceDisp}`);
+    if (amenities.length) socialLines.push(`${amenities.slice(0, 4).join(' · ')}`);
     if (notes)            socialLines.push('', notes.slice(0, 250) + (notes.length > 250 ? '…' : ''));
-    socialLines.push('', `📍 ${location}, Nairobi`,
-      `📞 Book a viewing: ${phone}`,
-      `🌐 realestateco.co.ke`, '',
+    socialLines.push('', `${location}, Nairobi`,
+      `Book a viewing: ${phone}`,
+      `realestateco.co.ke`, '',
       `${hashtagBase} ${hashtagType} ${hashtagLoc}`);
     const social = socialLines.join('\n');
 
@@ -473,19 +472,19 @@ const MarketingKit = {
     ].join('\n');
 
     // --- Meta Ads ---
-    const metaLines = [`🔑 ${headline}`, ''];
+    const metaLines = [`${headline}`, ''];
     if (notes) {
       metaLines.push(notes.slice(0, 400) + (notes.length > 400 ? '…' : ''), '');
     } else {
       metaLines.push(`Premium property available in ${location}, Nairobi.`, '');
     }
-    if (priceDisp)        metaLines.push(`💰 Asking: ${priceDisp}`);
-    if (unitTypes)        metaLines.push(`🛏️ ${unitTypes}`);
-    if (amenities.length) metaLines.push(`✅ ${amenities.slice(0, 5).join(', ')}`);
-    metaLines.push('', `📍 ${location}, Nairobi`,
-      `📞 Call/WhatsApp: ${phone}`,
-      `🌐 realestateco.co.ke`, '',
-      `👉 DM or call to book a viewing. Property name disclosed on enquiry.`);
+    if (priceDisp)        metaLines.push(`Asking: ${priceDisp}`);
+    if (unitTypes)        metaLines.push(`${unitTypes}`);
+    if (amenities.length) metaLines.push(`${amenities.slice(0, 5).join(', ')}`);
+    metaLines.push('', `${location}, Nairobi`,
+      `Call/WhatsApp: ${phone}`,
+      `realestateco.co.ke`, '',
+      `DM or call to book a viewing. Property name disclosed on enquiry.`);
     const metaAds = metaLines.join('\n');
 
     return { buyRentKenya, social, googleAds, metaAds };
@@ -610,13 +609,13 @@ const MarketingKit = {
       if (units) {
         ctx.fillStyle = '#444';
         ctx.font = '20px Arial, sans-serif';
-        ctx.fillText('🛏️ ' + (units.length > 50 ? units.slice(0, 48) + '…' : units), W / 2, detY + 225);
+        ctx.fillText('' + (units.length > 50 ? units.slice(0, 48) + '…' : units), W / 2, detY + 225);
       }
       if (amenArr.length) {
         ctx.font = '17px Arial, sans-serif';
         ctx.fillStyle = '#555';
         const al = amenArr.slice(0, 5).join('  ·  ');
-        ctx.fillText('✅ ' + (al.length > 60 ? al.slice(0, 58) + '…' : al), W / 2, detY + 260);
+        ctx.fillText('' + (al.length > 60 ? al.slice(0, 58) + '…' : al), W / 2, detY + 260);
       }
       ctx.textAlign = 'left';
     } else {
@@ -624,19 +623,19 @@ const MarketingKit = {
       ctx.fillStyle = NAVY;
       ctx.font = 'bold 34px Georgia, serif';
       ctx.textAlign = 'left';
-      const locFull = '📍 ' + (sub.propertyLocation || '').toUpperCase() + ', NAIROBI';
+      const locFull = '' + (sub.propertyLocation || '').toUpperCase() + ', NAIROBI';
       ctx.fillText(locFull.length > 36 ? locFull.slice(0, 34) + '…' : locFull, 28, detY + 46);
 
       if (units) {
         ctx.font = '21px Arial, sans-serif';
         ctx.fillStyle = '#444';
-        ctx.fillText('🛏️ ' + (units.length > 58 ? units.slice(0, 56) + '…' : units), 28, detY + 84);
+        ctx.fillText('' + (units.length > 58 ? units.slice(0, 56) + '…' : units), 28, detY + 84);
       }
       if (amenArr.length) {
         ctx.font = '18px Arial, sans-serif';
         ctx.fillStyle = '#555';
         const al = amenArr.slice(0, 5).join('  ·  ');
-        ctx.fillText('✅ ' + (al.length > 64 ? al.slice(0, 62) + '…' : al), 28, detY + 118);
+        ctx.fillText('' + (al.length > 64 ? al.slice(0, 62) + '…' : al), 28, detY + 118);
       }
       // Description snippet if space allows
       const notes = (sub.fieldNotes || '').trim();
@@ -728,7 +727,7 @@ const MarketingKit = {
     if (!el) return;
     const shown = el.style.display !== 'none';
     el.style.display  = shown ? 'none' : 'block';
-    if (btn) btn.textContent = shown ? `🎥 Show Video Downloads (${(this._sub.videos || []).filter(u => u.startsWith('http')).length})` : '🎥 Hide Video Downloads';
+    if (btn) btn.textContent = shown ? `Show Video Downloads (${(this._sub.videos || []).filter(u => u.startsWith('http')).length})` : 'Hide Video Downloads';
   },
 
   close() {
@@ -751,7 +750,7 @@ const UserSettings = {
     overlay.innerHTML = `
       <div class="modal">
         <div class="modal-header">
-          <h3 class="modal-title">🔑 Change Password</h3>
+          <h3 class="modal-title">Change Password</h3>
           <button class="modal-close" onclick="document.getElementById('pwd-modal-overlay').classList.remove('open')">✕</button>
         </div>
         <form onsubmit="UserSettings.savePassword(event)">
@@ -797,7 +796,7 @@ const UserSettings = {
       user.password = hashed;
       user.passwordHashed = true;
       DB.setCurrentUser(user);
-      Toast.success('Password changed successfully! 🔐');
+      Toast.success('Password changed successfully!');
       document.getElementById('pwd-modal-overlay').classList.remove('open');
     } catch (err) {
       Toast.error('Failed to update password.');
@@ -849,7 +848,7 @@ const LoginPage = {
       <div class="login-page">
         <div class="login-container">
           <div class="login-header">
-            <div class="login-logo">🏢</div>
+            
             <h1 class="login-title">${CONFIG.appName}</h1>
             <p class="login-subtitle">${CONFIG.appTagline}</p>
           </div>
@@ -862,7 +861,7 @@ const LoginPage = {
             <!-- Sign In panel -->
             <div id="login-panel">
               <div class="info-box" style="margin-bottom:16px">
-                <span class="info-icon">💡</span>
+                
                 <span>
                   <strong>Demo mode</strong> — this is a portfolio showcase. Sign in with
                   <strong>admin@realestateco.co.ke</strong> / <strong>Demo@2026</strong>,
@@ -878,7 +877,7 @@ const LoginPage = {
                   <label class="form-label" for="login-password">Password</label>
                   <div class="password-wrapper">
                     <input id="login-password" type="password" class="form-control" placeholder="Enter your password" required autocomplete="current-password" />
-                    <button type="button" class="password-toggle" onclick="LoginPage.togglePassword('login-password', this)">👁️</button>
+                    <button type="button" class="password-toggle" onclick="LoginPage.togglePassword('login-password', this)">Show</button>
                   </div>
                 </div>
                 <button type="submit" id="login-btn" class="btn btn-primary btn-full btn-lg" style="margin-top:8px">Sign In</button>
@@ -891,7 +890,7 @@ const LoginPage = {
               <!-- Step 1: Enter email -->
               <div id="fp-step-1">
                 <div style="text-align:center;padding:12px 0 20px">
-                  <div style="font-size:2.2rem;margin-bottom:10px">🔐</div>
+                  
                   <h3 style="font-size:1rem;color:var(--navy);margin-bottom:6px">Reset Your Password</h3>
                   <p style="color:var(--text-muted);font-size:0.82rem">Enter your email to receive a 6-digit reset code.</p>
                 </div>
@@ -907,7 +906,7 @@ const LoginPage = {
               <!-- Step 2: Enter OTP -->
               <div id="fp-step-2" style="display:none">
                 <div style="text-align:center;padding:12px 0 20px">
-                  <div style="font-size:2.2rem;margin-bottom:10px">📬</div>
+                  
                   <h3 style="font-size:1rem;color:var(--navy);margin-bottom:6px">Check Your Email</h3>
                   <p style="color:var(--text-muted);font-size:0.82rem">Enter the 6-digit code sent to <strong id="fp-email-display"></strong></p>
                 </div>
@@ -924,7 +923,7 @@ const LoginPage = {
               <!-- Step 3: New password -->
               <div id="fp-step-3" style="display:none">
                 <div style="text-align:center;padding:12px 0 20px">
-                  <div style="font-size:2.2rem;margin-bottom:10px">🔑</div>
+                  
                   <h3 style="font-size:1rem;color:var(--navy);margin-bottom:6px">Set New Password</h3>
                   <p style="color:var(--text-muted);font-size:0.82rem">Choose a new password for your account.</p>
                 </div>
@@ -933,7 +932,7 @@ const LoginPage = {
                     <label class="form-label">New Password</label>
                     <div class="password-wrapper">
                       <input type="password" id="fp-newpwd" class="form-control" placeholder="Min 6 characters" required minlength="6" />
-                      <button type="button" class="password-toggle" onclick="LoginPage.togglePassword('fp-newpwd',this)">👁️</button>
+                      <button type="button" class="password-toggle" onclick="LoginPage.togglePassword('fp-newpwd',this)">Show</button>
                     </div>
                   </div>
                   <div class="form-group">
@@ -975,8 +974,8 @@ const LoginPage = {
 
   togglePassword(inputId, btn) {
     const input = document.getElementById(inputId);
-    if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
-    else { input.type = 'password'; btn.textContent = '👁️'; }
+    if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
+    else { input.type = 'password'; btn.textContent = 'Show'; }
   },
 
   async handleLogin(e) {
@@ -1005,7 +1004,7 @@ const LoginPage = {
       }
 
       DB.setCurrentUser(user);
-      Toast.success(`Welcome back, ${sanitize(user.name)}! 👋`);
+      Toast.success(`Welcome back, ${sanitize(user.name)}!`);
       if (user.role === 'admin') Router.go('admin');
       else Router.go('salesperson');
     } catch (err) {
@@ -1114,7 +1113,6 @@ const AdminDashboard = {
       <nav class="navbar">
         <div class="navbar-inner">
           <div class="logo">
-            <div class="logo-icon">🏢</div>
             <div><div class="logo-text">${CONFIG.appName}</div><span class="logo-sub">Admin Portal · <span class="badge badge-rent" style="vertical-align:middle">Demo</span></span></div>
           </div>
           <div class="nav-actions">
@@ -1125,8 +1123,8 @@ const AdminDashboard = {
                 <div class="nav-user-role"><span class="badge badge-admin" style="padding:1px 6px;font-size:0.65rem">Admin</span></div>
               </div>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="UserSettings.openChangePasswordModal()">🔑 Change Password</button>
-            <button class="btn btn-secondary btn-sm" data-action="logout">🚪 Logout</button>
+            <button class="btn btn-secondary btn-sm" onclick="UserSettings.openChangePasswordModal()">Change Password</button>
+            <button class="btn btn-secondary btn-sm" data-action="logout">Logout</button>
           </div>
         </div>
       </nav>`;
@@ -1134,16 +1132,16 @@ const AdminDashboard = {
 
   _sidebar(spCount = 0, subCount = 0) {
     const sections = [
-      { id: 'overview',    icon: '📊', label: 'Overview' },
-      { id: 'accounts',   icon: '👥', label: 'User Accounts', badge: spCount },
-      { id: 'submissions', icon: '🏠', label: 'All Submissions', badge: subCount },
+      { id: 'overview', label: 'Overview' },
+      { id: 'accounts', label: 'User Accounts', badge: spCount },
+      { id: 'submissions', label: 'All Submissions', badge: subCount },
     ];
     return `
       <div class="sidebar-section">
         <div class="sidebar-label">Navigation</div>
         ${sections.map(s => `
           <button class="sidebar-item ${this.currentSection === s.id ? 'active' : ''}" data-nav="${s.id}">
-            <span class="sidebar-icon">${s.icon}</span>${s.label}
+            ${s.label}
             ${s.badge !== undefined ? `<span class="sidebar-badge">${s.badge}</span>` : ''}
           </button>`).join('')}
       </div>`;
@@ -1173,7 +1171,7 @@ const AdminDashboard = {
       main.classList.add('page-enter');
       setTimeout(() => main.classList.remove('page-enter'), 400);
     } catch (err) {
-      main.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">Error loading section</div><div class="empty-state-text">${err.message}</div></div>`;
+      main.innerHTML = `<div class="empty-state"><div class="empty-state-title">Error loading section</div><div class="empty-state-text">${err.message}</div></div>`;
     }
     Router.attachGlobalEvents();
     this._updateSidebar();
@@ -1203,11 +1201,11 @@ const AdminDashboard = {
           <button class="btn btn-primary btn-sm" onclick="AdminDashboard.showSection('accounts')">+ Add User</button>
         </div>
         <div class="stats-grid">
-          <div class="stat-card" style="--stat-color:var(--navy)"><div class="stat-icon">👥</div><div class="stat-value">${users.length}</div><div class="stat-label">Total Users</div></div>
-          <div class="stat-card" style="--stat-color:var(--success)"><div class="stat-icon">🏠</div><div class="stat-value">${subs.length}</div><div class="stat-label">Total Submissions</div></div>
-          <div class="stat-card" style="--stat-color:var(--gold)"><div class="stat-icon">💰</div><div class="stat-value" style="font-size:1.3rem">${formatCurrency(totalValue)}</div><div class="stat-label">Total Portfolio Value</div></div>
+          <div class="stat-card" style="--stat-color:var(--navy)"><div class="stat-value">${users.length}</div><div class="stat-label">Total Users</div></div>
+          <div class="stat-card" style="--stat-color:var(--success)"><div class="stat-value">${subs.length}</div><div class="stat-label">Total Submissions</div></div>
+          <div class="stat-card" style="--stat-color:var(--gold)"><div class="stat-value" style="font-size:1.3rem">${formatCurrency(totalValue)}</div><div class="stat-label">Total Portfolio Value</div></div>
           <div class="stat-card" style="--stat-color:var(--warning)">
-            <div class="stat-icon">🏷️</div>
+            
             <div class="stat-value" style="font-size:1rem">
               <span style="color:var(--navy)">${forSale}</span><span style="font-size:0.7rem;color:var(--text-muted)"> sale</span>
               &nbsp;/&nbsp;
@@ -1220,11 +1218,11 @@ const AdminDashboard = {
         </div>
         <div class="card">
           <div class="card-header">
-            <span class="card-title">🕐 Recent Submissions</span>
+            <span class="card-title">Recent Submissions</span>
             <button class="btn btn-secondary btn-sm" onclick="AdminDashboard.showSection('submissions')">View All →</button>
           </div>
           ${recent.length === 0 ? `
-            <div class="empty-state"><div class="empty-state-icon">🏗️</div><div class="empty-state-title">No submissions yet</div><div class="empty-state-text">Salespersons haven't submitted any properties yet.</div></div>
+            <div class="empty-state"><div class="empty-state-title">No submissions yet</div><div class="empty-state-text">Salespersons haven't submitted any properties yet.</div></div>
           ` : `
             <div class="table-wrapper">
               <table class="data-table">
@@ -1232,7 +1230,7 @@ const AdminDashboard = {
                 <tbody>
                   ${recent.map(s => `
                     <tr>
-                      <td><div class="td-name">${sanitize(s.propertyTitle)}</div><div class="td-secondary">📍 ${sanitize(s.propertyLocation)}</div></td>
+                      <td><div class="td-name">${sanitize(s.propertyTitle)}</div><div class="td-secondary">${sanitize(s.propertyLocation)}</div></td>
                       <td>${sanitize(s.salespersonName)}</td>
                       <td><span class="badge ${listingBadgeClass(s.listingType)}">${sanitize(s.listingType)}</span></td>
                       <td class="td-price">${s.unitVariants && s.unitVariants.length > 0 ? 'From ' + formatCurrency(s.startingPrice) : formatCurrency(s.listingPrice || s.startingPrice)}</td>
@@ -1258,14 +1256,14 @@ const AdminDashboard = {
       <div>
         <div class="section-header">
           <div><h2 class="section-title">User Accounts</h2><p class="section-subtitle">Manage Admins and Salespersons.</p></div>
-          <button class="btn btn-primary" onclick="AdminDashboard.openAddUserModal()">➕ Add User</button>
+          <button class="btn btn-primary" onclick="AdminDashboard.openAddUserModal()">Add User</button>
         </div>
         <div class="info-box" style="margin-bottom:20px">
-          <span class="info-icon">💡</span>
+          
           <span>Create an account for your team. Admins can view all data and manage users. Salespersons can only submit listings.</span>
         </div>
         ${users.length === 0 ? `
-          <div class="card"><div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-title">No user accounts yet</div><div class="empty-state-text">Create the first account to get started.</div></div></div>
+          <div class="card"><div class="empty-state"><div class="empty-state-title">No user accounts yet</div><div class="empty-state-text">Create the first account to get started.</div></div></div>
         ` : `
           <div class="table-wrapper">
             <table class="data-table">
@@ -1280,8 +1278,8 @@ const AdminDashboard = {
                     <td>
                       <div style="display:flex;align-items:center;gap:4px">
                         ${u.passwordHashed
-                          ? `<span style="font-size:0.72rem;color:var(--success);background:var(--success-light);padding:2px 8px;border-radius:100px">🔐 Hashed</span>`
-                          : `<span style="font-size:0.72rem;color:var(--warning);background:var(--warning-light);padding:2px 8px;border-radius:100px">⚠️ Plain-text — ask user to reset password</span>`
+                          ? `<span style="font-size:0.72rem;color:var(--success);background:var(--success-light);padding:2px 8px;border-radius:100px">Hashed</span>`
+                          : `<span style="font-size:0.72rem;color:var(--warning);background:var(--warning-light);padding:2px 8px;border-radius:100px">Plain-text — ask user to reset password</span>`
                         }
                       </div>
                     </td>
@@ -1290,7 +1288,7 @@ const AdminDashboard = {
                       <div class="account-row-actions">
                         <button class="btn btn-secondary btn-sm" onclick="AdminDashboard.editUser('${u.id}')">Edit</button>
                         <button class="btn ${u.status === 'active' ? 'btn-danger' : 'btn-success'} btn-sm" onclick="AdminDashboard.toggleUserStatus('${u.id}')">${u.status === 'active' ? 'Deactivate' : 'Activate'}</button>
-                        ${u.id !== DB.getCurrentUser().id ? `<button class="btn btn-danger btn-sm" onclick="AdminDashboard.deleteUser('${u.id}')">🗑️</button>` : ''}
+                        ${u.id !== DB.getCurrentUser().id ? `<button class="btn btn-danger btn-sm" onclick="AdminDashboard.deleteUser('${u.id}')">Delete</button>` : ''}
                       </div>
                     </td>
                   </tr>`).join('')}
@@ -1302,7 +1300,7 @@ const AdminDashboard = {
         <div class="modal-overlay" id="add-user-modal">
           <div class="modal">
             <div class="modal-header">
-              <h3 class="modal-title" id="modal-title">➕ Add User Account</h3>
+              <h3 class="modal-title" id="modal-title">Add User Account</h3>
               <button class="modal-close" onclick="AdminDashboard.closeModal('add-user-modal')">✕</button>
             </div>
             <form id="add-user-form" onsubmit="AdminDashboard.saveUser(event)">
@@ -1325,7 +1323,7 @@ const AdminDashboard = {
                 <label class="form-label">Password <span class="required">*</span></label>
                 <div style="display:flex;gap:8px">
                   <div class="password-wrapper" style="flex:1"><input type="text" id="user-password" class="form-control" placeholder="Set a secure password" required /></div>
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('user-password').value=generatePassword()">🎲 Generate</button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('user-password').value=generatePassword()">Generate</button>
                 </div>
                 <p class="form-hint">The user will use these credentials to log in.</p>
               </div>
@@ -1348,7 +1346,7 @@ const AdminDashboard = {
         </div>
         <div class="search-bar">
           <div class="search-input-wrapper">
-            <span class="search-icon">🔍</span>
+            
             <input type="text" class="form-control" placeholder="Search properties…" id="search-subs" oninput="AdminDashboard.filterUI()" />
           </div>
           <select class="form-control" id="filter-agent" onchange="AdminDashboard.filterUI()" style="width:auto;min-width:180px">
@@ -1366,7 +1364,7 @@ const AdminDashboard = {
   },
 
   _subsGrid(subs) {
-    if (subs.length === 0) return `<div class="empty-state"><div class="empty-state-icon">🏗️</div><div class="empty-state-title">No submissions found</div><div class="empty-state-text">No properties match your search.</div></div>`;
+    if (subs.length === 0) return `<div class="empty-state"><div class="empty-state-title">No submissions found</div><div class="empty-state-text">No properties match your search.</div></div>`;
     return `
       <div class="properties-grid">
         ${subs.map(s => {
@@ -1380,7 +1378,7 @@ const AdminDashboard = {
           return `
             <div class="property-card">
               <div class="property-card-header">
-                <div><div class="property-title">${sanitize(s.propertyTitle)}</div><div class="property-location">📍 ${sanitize(s.propertyLocation)}</div></div>
+                <div><div class="property-title">${sanitize(s.propertyTitle)}</div><div class="property-location">${sanitize(s.propertyLocation)}</div></div>
                 <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
                   <span class="badge ${listingBadgeClass(s.listingType)}">${sanitize(s.listingType)}</span>
                   ${submissionStatusBadge(s.status)}
@@ -1388,15 +1386,15 @@ const AdminDashboard = {
               </div>
               ${thumb ? `<div style="height:160px;overflow:hidden;cursor:pointer" onclick="LightboxViewer.open(${JSON.stringify(s.photos.filter(u=>u.startsWith('http')))},0)"><img src="${thumb}" loading="lazy" alt="${sanitize(s.propertyTitle)}" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
               <div class="property-card-body">
-                <div class="property-detail"><span class="property-detail-icon">🛏️</span>${sanitize(unitSummary || 'N/A')}</div>
-                <div class="property-detail"><span class="property-detail-icon">🌟</span>${sanitize(s.amenities || 'N/A')}</div>
+                <div class="property-detail">${sanitize(unitSummary || 'N/A')}</div>
+                <div class="property-detail">${sanitize(s.amenities || 'N/A')}</div>
                 ${s.fieldNotes ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:8px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${sanitize(s.fieldNotes)}</div>` : ''}
               </div>
               <div class="property-card-footer">
-                <div><div class="property-price">${dispPrice}</div><div class="property-agent">👤 ${sanitize(s.salespersonName)} · ${formatDate(s.createdAt)}</div></div>
+                <div><div class="property-price">${dispPrice}</div><div class="property-agent">${sanitize(s.salespersonName)} · ${formatDate(s.createdAt)}</div></div>
                 <div style="display:flex;gap:6px">
                   <button class="btn btn-secondary btn-sm" onclick="AdminDashboard.viewSubmission('${s.id}')">View</button>
-                  <button class="btn btn-danger btn-sm" onclick="AdminDashboard.deleteSubmission('${s.id}')">🗑️</button>
+                  <button class="btn btn-danger btn-sm" onclick="AdminDashboard.deleteSubmission('${s.id}')">Delete</button>
                 </div>
               </div>
             </div>`;
@@ -1444,15 +1442,15 @@ const AdminDashboard = {
       if (httpList.length === 0 && pendingList.length === 0) return '';
       return `
         <div style="margin-bottom:16px">
-          <div class="detail-label" style="margin-bottom:8px">${type === 'photo' ? `📸 Photos (${urls.length})` : `🎥 Videos (${urls.length})`}</div>
+          <div class="detail-label" style="margin-bottom:8px">${type === 'photo' ? `Photos (${urls.length})` : `Videos (${urls.length})`}</div>
           <div class="photo-grid">
             ${httpList.map((url, idx) =>
               type === 'photo'
-                ? `<div class="photo-thumb lightbox-trigger" onclick="LightboxViewer.open(${JSON.stringify(httpList)},${idx})" title="Click to enlarge"><img src="${url}" alt="" loading="lazy" /><div class="photo-thumb-overlay">🔍</div></div>`
-                : `<div class="photo-thumb lightbox-trigger" onclick="LightboxViewer.open(${JSON.stringify(httpList)},${idx})" title="Click to play"><video src="${url}" preload="metadata" style="width:100%;height:100%;object-fit:cover"></video><div class="photo-thumb-overlay">▶</div></div>`
+                ? `<div class="photo-thumb lightbox-trigger" onclick="LightboxViewer.open(${JSON.stringify(httpList)},${idx})" title="Click to enlarge"><img src="${url}" alt="" loading="lazy" /></div>`
+                : `<div class="photo-thumb lightbox-trigger" onclick="LightboxViewer.open(${JSON.stringify(httpList)},${idx})" title="Click to play"><video src="${url}" preload="metadata" style="width:100%;height:100%;object-fit:cover"></video></div>`
             ).join('')}
             ${pendingList.map(url =>
-              `<div class="photo-thumb" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:1.4rem;background:var(--bg-primary)">${type === 'photo' ? '🖼️' : '🎥'}<span style="font-size:0.6rem;color:var(--text-muted);text-align:center;padding:0 4px">${url.replace('pending_upload://', '')}</span></div>`
+              `<div class="photo-thumb" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:1.4rem;background:var(--bg-primary)">${type === 'photo' ? 'Photo' : 'Video'}<span style="font-size:0.6rem;color:var(--text-muted);text-align:center;padding:0 4px">${url.replace('pending_upload://', '')}</span></div>`
             ).join('')}
           </div>
         </div>`;
@@ -1461,7 +1459,7 @@ const AdminDashboard = {
     // Unit variants table
     const variantsHtml = sub.unitVariants && sub.unitVariants.length > 0 ? `
       <div style="margin-bottom:20px">
-        <div class="detail-label" style="margin-bottom:8px">🏢 Unit Types & Pricing</div>
+        <div class="detail-label" style="margin-bottom:8px">Unit Types & Pricing</div>
         <div class="table-wrapper">
           <table class="data-table variants-table">
             <thead><tr><th>Unit Type</th><th>Size</th><th>Price (KSh)</th><th>Floor / Position</th><th>Units Available</th></tr></thead>
@@ -1482,19 +1480,19 @@ const AdminDashboard = {
 
     // Fallback for old submissions (single price)
     const legacyPriceHtml = (!sub.unitVariants || sub.unitVariants.length === 0) ? `
-      <div class="detail-item"><div class="detail-label">Size</div><div class="detail-value">🛏️ ${sub.propertySize || '—'}</div></div>
+      <div class="detail-item"><div class="detail-label">Size</div><div class="detail-value">${sub.propertySize || '—'}</div></div>
       <div class="detail-item"><div class="detail-label">Price</div><div class="detail-value" style="color:var(--navy);font-weight:700">${formatCurrency(sub.listingPrice || sub.startingPrice)}</div></div>` : '';
 
     overlay.innerHTML = `
       <div class="modal" style="max-width:760px">
         <div class="modal-header">
-          <h3 class="modal-title">🏠 ${sanitize(sub.propertyTitle)}</h3>
+          <h3 class="modal-title">${sanitize(sub.propertyTitle)}</h3>
           <button class="modal-close" onclick="document.getElementById('detail-modal-overlay').classList.remove('open')">✕</button>
         </div>
         <div class="detail-grid">
-          <div class="detail-item"><div class="detail-label">Agent</div><div class="detail-value">👤 ${sanitize(sub.salespersonName)}</div></div>
-          <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value">📞 ${sanitize(sub.salespersonContact)}</div></div>
-          <div class="detail-item"><div class="detail-label">Location</div><div class="detail-value">📍 ${sanitize(sub.propertyLocation)}</div></div>
+          <div class="detail-item"><div class="detail-label">Agent</div><div class="detail-value">${sanitize(sub.salespersonName)}</div></div>
+          <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value">${sanitize(sub.salespersonContact)}</div></div>
+          <div class="detail-item"><div class="detail-label">Location</div><div class="detail-value">${sanitize(sub.propertyLocation)}</div></div>
           <div class="detail-item"><div class="detail-label">Listing Type</div><div class="detail-value"><span class="badge ${listingBadgeClass(sub.listingType)}">${sanitize(sub.listingType)}</span></div></div>
           <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">${submissionStatusBadge(sub.status)}</div></div>
           ${legacyPriceHtml}
@@ -1511,14 +1509,14 @@ const AdminDashboard = {
             <div style="display:flex;flex-direction:column;gap:6px">
               ${sub.documents.map(url => `
                 <a href="${url.startsWith('http') ? url : '#'}" target="_blank" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;font-size:0.8rem;color:var(--navy);text-decoration:none">
-                  📄 ${url.startsWith('http') ? 'View Document ↗' : url.replace('pending_upload://', '')}
+                  ${url.startsWith('http') ? 'View Document' : url.replace('pending_upload://', '')}
                 </a>`).join('')}
             </div>
           </div>` : ''}
         <script type="application/json" id="detail-sub-json">${JSON.stringify(sub).replace(/<\/script/gi, '<\\/script')}<\/script>
         <div class="modal-footer">
-          <button class="btn btn-danger" onclick="AdminDashboard.deleteSubmission('${sub.id}')">🗑️ Delete</button>
-          <button class="btn btn-primary" onclick="MarketingKit.open(JSON.parse(document.getElementById('detail-sub-json').textContent))">📊 Marketing Kit</button>
+          <button class="btn btn-danger" onclick="AdminDashboard.deleteSubmission('${sub.id}')">Delete</button>
+          <button class="btn btn-primary" onclick="MarketingKit.open(JSON.parse(document.getElementById('detail-sub-json').textContent))">Marketing Kit</button>
           <button class="btn btn-secondary" onclick="document.getElementById('detail-modal-overlay').classList.remove('open')">Close</button>
         </div>
       </div>`;
@@ -1529,7 +1527,7 @@ const AdminDashboard = {
     const modal = document.getElementById('add-user-modal');
     if (!modal) { this.showSection('accounts').then(() => setTimeout(() => this.openAddUserModal(userId), 200)); return; }
     document.getElementById('edit-user-id').value = userId || '';
-    document.getElementById('modal-title').textContent = userId ? '✏️ Edit Account' : '➕ Add User Account';
+    document.getElementById('modal-title').textContent = userId ? 'Edit Account' : 'Add User Account';
     document.getElementById('save-user-btn').textContent = userId ? 'Save Changes' : 'Create Account';
     if (userId) {
       DB.getUserById(userId).then(u => {
@@ -1575,7 +1573,7 @@ const AdminDashboard = {
         Toast.success('Account updated!');
       } else {
         await DB.addUser({ name, email, phone, role, status: 'active', password: hashed, passwordHashed: true });
-        Toast.success(`Account created for ${name}! 🎉`);
+        Toast.success(`Account created for ${name}!`);
       }
       this.closeModal('add-user-modal');
       this.showSection('accounts');
@@ -1657,7 +1655,6 @@ const SalespersonDashboard = {
       <nav class="navbar">
         <div class="navbar-inner">
           <div class="logo">
-            <div class="logo-icon">🏢</div>
             <div><div class="logo-text">${CONFIG.appName}</div><span class="logo-sub">Salesperson Portal · <span class="badge badge-rent" style="vertical-align:middle">Demo</span></span></div>
           </div>
           <div class="nav-actions">
@@ -1665,8 +1662,8 @@ const SalespersonDashboard = {
               <div class="nav-avatar">${getInitials(user.name)}</div>
               <div><div class="nav-user-name">${sanitize(user.name)}</div><div class="nav-user-role" style="color:var(--success);font-size:0.7rem">● Salesperson</div></div>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="UserSettings.openChangePasswordModal()">🔑 Change Password</button>
-            <button class="btn btn-secondary btn-sm" data-action="logout">🚪 Logout</button>
+            <button class="btn btn-secondary btn-sm" onclick="UserSettings.openChangePasswordModal()">Change Password</button>
+            <button class="btn btn-secondary btn-sm" data-action="logout">Logout</button>
           </div>
         </div>
       </nav>`;
@@ -1674,16 +1671,16 @@ const SalespersonDashboard = {
 
   _sidebar(subCount = 0) {
     const sections = [
-      { id: 'overview',        icon: '📊', label: 'My Dashboard' },
-      { id: 'submit',          icon: '➕', label: 'Submit Property' },
-      { id: 'my-submissions',  icon: '🏠', label: 'My Submissions', badge: subCount },
+      { id: 'overview', label: 'My Dashboard' },
+      { id: 'submit', label: 'Submit Property' },
+      { id: 'my-submissions', label: 'My Submissions', badge: subCount },
     ];
     return `
       <div class="sidebar-section">
         <div class="sidebar-label">Navigation</div>
         ${sections.map(s => `
           <button class="sidebar-item ${this.currentSection === s.id ? 'active' : ''}" data-nav="${s.id}">
-            <span class="sidebar-icon">${s.icon}</span>${s.label}
+            ${s.label}
             ${s.badge !== undefined ? `<span class="sidebar-badge">${s.badge}</span>` : ''}
           </button>`).join('')}
       </div>`;
@@ -1712,7 +1709,7 @@ const SalespersonDashboard = {
       setTimeout(() => main.classList.remove('page-enter'), 400);
       if (section === 'submit') PropertyForm.init();
     } catch (err) {
-      main.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">Error</div><div class="empty-state-text">${err.message}</div></div>`;
+      main.innerHTML = `<div class="empty-state"><div class="empty-state-title">Error</div><div class="empty-state-text">${err.message}</div></div>`;
     }
     Router.attachGlobalEvents();
     this._updateSidebar();
@@ -1735,19 +1732,19 @@ const SalespersonDashboard = {
     return `
       <div>
         <div class="section-header">
-          <div><h2 class="section-title">Welcome, ${sanitize(user.name)}! 👋</h2><p class="section-subtitle">Manage your property listings and submissions.</p></div>
-          <button class="btn btn-primary" onclick="SalespersonDashboard.showSection('submit')">➕ Submit Property</button>
+          <div><h2 class="section-title">Welcome, ${sanitize(user.name)}!</h2><p class="section-subtitle">Manage your property listings and submissions.</p></div>
+          <button class="btn btn-primary" onclick="SalespersonDashboard.showSection('submit')">Submit Property</button>
         </div>
         <div class="stats-grid">
-          <div class="stat-card" style="--stat-color:var(--navy)"><div class="stat-icon">🏠</div><div class="stat-value">${subs.length}</div><div class="stat-label">Total Submissions</div></div>
-          <div class="stat-card" style="--stat-color:var(--gold)"><div class="stat-icon">💰</div><div class="stat-value" style="font-size:1.3rem">${formatCurrency(totalValue)}</div><div class="stat-label">Portfolio Value</div></div>
-          <div class="stat-card" style="--stat-color:var(--success)"><div class="stat-icon">🏷️</div><div class="stat-value">${subs.filter(s => s.listingType === 'For Sale').length}</div><div class="stat-label">For Sale</div></div>
-          <div class="stat-card" style="--stat-color:var(--warning)"><div class="stat-icon">🔑</div><div class="stat-value">${subs.filter(s => s.listingType === 'For Rent').length}</div><div class="stat-label">For Rent</div></div>
+          <div class="stat-card" style="--stat-color:var(--navy)"><div class="stat-value">${subs.length}</div><div class="stat-label">Total Submissions</div></div>
+          <div class="stat-card" style="--stat-color:var(--gold)"><div class="stat-value" style="font-size:1.3rem">${formatCurrency(totalValue)}</div><div class="stat-label">Portfolio Value</div></div>
+          <div class="stat-card" style="--stat-color:var(--success)"><div class="stat-value">${subs.filter(s => s.listingType === 'For Sale').length}</div><div class="stat-label">For Sale</div></div>
+          <div class="stat-card" style="--stat-color:var(--warning)"><div class="stat-value">${subs.filter(s => s.listingType === 'For Rent').length}</div><div class="stat-label">For Rent</div></div>
         </div>
         ${recent.length > 0 ? `
           <div class="card">
             <div class="card-header">
-              <span class="card-title">🕐 Recent Activity</span>
+              <span class="card-title">Recent Activity</span>
               <button class="btn btn-secondary btn-sm" onclick="SalespersonDashboard.showSection('my-submissions')">View All →</button>
             </div>
             <div class="properties-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
@@ -1759,7 +1756,7 @@ const SalespersonDashboard = {
                 return `
                   <div class="property-card">
                     <div class="property-card-header">
-                      <div><div class="property-title">${sanitize(s.propertyTitle)}</div><div class="property-location">📍 ${sanitize(s.propertyLocation)}</div></div>
+                      <div><div class="property-title">${sanitize(s.propertyTitle)}</div><div class="property-location">${sanitize(s.propertyLocation)}</div></div>
                       <span class="badge ${listingBadgeClass(s.listingType)}">${sanitize(s.listingType)}</span>
                     </div>
                     ${thumb ? `<div style="height:120px;overflow:hidden"><img src="${thumb}" loading="lazy" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
@@ -1773,8 +1770,8 @@ const SalespersonDashboard = {
           </div>
         ` : `
           <div class="card">
-            <div class="empty-state"><div class="empty-state-icon">🏗️</div><div class="empty-state-title">No submissions yet</div><div class="empty-state-text">Start by submitting your first property listing.</div></div>
-            <div style="text-align:center;margin-top:16px"><button class="btn btn-primary" onclick="SalespersonDashboard.showSection('submit')">➕ Submit First Property</button></div>
+            <div class="empty-state"><div class="empty-state-title">No submissions yet</div><div class="empty-state-text">Start by submitting your first property listing.</div></div>
+            <div style="text-align:center;margin-top:16px"><button class="btn btn-primary" onclick="SalespersonDashboard.showSection('submit')">Submit First Property</button></div>
           </div>`}
       </div>`;
   },
@@ -1786,10 +1783,10 @@ const SalespersonDashboard = {
       <div>
         <div class="section-header">
           <div><h2 class="section-title">My Submissions</h2><p class="section-subtitle">${subs.length} propert${subs.length !== 1 ? 'ies' : 'y'} submitted</p></div>
-          <button class="btn btn-primary" onclick="SalespersonDashboard.showSection('submit')">➕ New Submission</button>
+          <button class="btn btn-primary" onclick="SalespersonDashboard.showSection('submit')">New Submission</button>
         </div>
         ${subs.length === 0 ? `
-          <div class="empty-state"><div class="empty-state-icon">🏗️</div><div class="empty-state-title">No submissions yet</div><div class="empty-state-text">Submit a property to see it here.</div></div>
+          <div class="empty-state"><div class="empty-state-title">No submissions yet</div><div class="empty-state-text">Submit a property to see it here.</div></div>
         ` : `
           <div class="properties-grid">
             ${subs.map(s => {
@@ -1803,7 +1800,7 @@ const SalespersonDashboard = {
               return `
                 <div class="property-card">
                   <div class="property-card-header">
-                    <div><div class="property-title">${sanitize(s.propertyTitle)}</div><div class="property-location">📍 ${sanitize(s.propertyLocation)}</div></div>
+                    <div><div class="property-title">${sanitize(s.propertyTitle)}</div><div class="property-location">${sanitize(s.propertyLocation)}</div></div>
                     <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
                       <span class="badge ${listingBadgeClass(s.listingType)}">${sanitize(s.listingType)}</span>
                       ${submissionStatusBadge(s.status)}
@@ -1811,12 +1808,12 @@ const SalespersonDashboard = {
                   </div>
                   ${thumb ? `<div style="height:160px;overflow:hidden"><img src="${thumb}" loading="lazy" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
                   <div class="property-card-body">
-                    <div class="property-detail"><span class="property-detail-icon">🛏️</span>${sanitize(unitSummary || 'N/A')}</div>
-                    <div class="property-detail"><span class="property-detail-icon">🌟</span>${sanitize(s.amenities || 'N/A')}</div>
+                    <div class="property-detail">${sanitize(unitSummary || 'N/A')}</div>
+                    <div class="property-detail">${sanitize(s.amenities || 'N/A')}</div>
                   </div>
                   <div class="property-card-footer">
-                    <div><div class="property-price">${dispPrice}</div><div class="property-agent">${formatDate(s.createdAt)}${s.updatedAt ? ' • ✏️ edited' : ''}</div></div>
-                    <button class="btn btn-secondary btn-sm" onclick="PropertyForm.openEdit('${s.id}')">✏️ Edit</button>
+                    <div><div class="property-price">${dispPrice}</div><div class="property-agent">${formatDate(s.createdAt)}${s.updatedAt ? ' • edited' : ''}</div></div>
+                    <button class="btn btn-secondary btn-sm" onclick="PropertyForm.openEdit('${s.id}')">Edit</button>
                   </div>
                 </div>`;
             }).join('')}
@@ -1853,7 +1850,7 @@ const PropertyForm = {
 
           <!-- Agent Info -->
           <div class="form-card">
-            <div class="form-section-title">👤 Agent Information</div>
+            <div class="form-section-title">Agent Information</div>
             <div class="form-row">
               <div class="form-group"><label class="form-label">Salesperson Name</label><input type="text" class="form-control" value="${user.name}" readonly style="opacity:0.7;cursor:not-allowed" /></div>
               <div class="form-group"><label class="form-label">Contact Number <span class="required">*</span></label><input type="tel" class="form-control" value="${user.phone || ''}" id="sp-contact" placeholder="+254712345678" required /></div>
@@ -1862,7 +1859,7 @@ const PropertyForm = {
 
           <!-- Property Info -->
           <div class="form-card">
-            <div class="form-section-title">🏠 Property Information</div>
+            <div class="form-section-title">Property Information</div>
             <div class="form-group">
               <label class="form-label" for="prop-title">Property Title <span class="required">*</span></label>
               <input type="text" id="prop-title" class="form-control" placeholder="e.g. Riverside Heights Apartments" required />
@@ -1890,9 +1887,9 @@ const PropertyForm = {
 
           <!-- Unit Variants / Pricing -->
           <div class="form-card">
-            <div class="form-section-title">🏢 Unit Types & Pricing <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted)">— Add one row per unit size or floor level</span></div>
+            <div class="form-section-title">Unit Types & Pricing <span style="font-size:0.7rem;font-weight:400;color:var(--text-muted)">— Add one row per unit size or floor level</span></div>
             <div class="info-box" style="margin-bottom:16px">
-              <span class="info-icon">💡</span>
+              
               <span>Add <strong>one row per unit type</strong>. For the same bedroom count at different floors/sizes, add separate rows. The lowest price will be shown as the “Starting from” price.</span>
             </div>
             <div id="unit-variants-container"></div>
@@ -1904,7 +1901,7 @@ const PropertyForm = {
 
           <!-- Amenities -->
           <div class="form-card">
-            <div class="form-section-title">🌟 Amenities & Features</div>
+            <div class="form-section-title">Amenities & Features</div>
             <div class="form-group">
               <label class="form-label">Amenities Available</label>
               <div class="amenities-chips" id="amenities-chips">
@@ -1921,7 +1918,7 @@ const PropertyForm = {
 
           <!-- Field Notes -->
           <div class="form-card">
-            <div class="form-section-title">📝 Field Notes & Description</div>
+            <div class="form-section-title">Field Notes & Description</div>
             <div class="form-group">
               <label class="form-label" for="field-notes">Raw Field Notes & Description <span class="required">*</span></label>
               <textarea id="field-notes" class="form-control" rows="6" placeholder="Describe the property in detail. Include condition, nearby amenities, special features, access routes, etc." required></textarea>
@@ -1930,23 +1927,23 @@ const PropertyForm = {
           </div>
 
           <div class="form-card">
-            <div class="form-section-title">📸 Media & Documents
+            <div class="form-section-title">Media & Documents
               ${CLOUDINARY_CONFIGURED
-                ? '<span style="font-size:0.7rem;background:rgba(26,140,91,0.12);color:var(--success);border-radius:100px;padding:2px 10px;margin-left:8px;font-weight:600">☁️ Cloudinary Connected</span>'
-                : '<span style="font-size:0.7rem;background:var(--warning-light);color:var(--warning);border-radius:100px;padding:2px 10px;margin-left:8px;font-weight:600">⚠️ Cloudinary not configured — files stored by name only</span>'}
+                ? '<span style="font-size:0.7rem;background:rgba(26,140,91,0.12);color:var(--success);border-radius:100px;padding:2px 10px;margin-left:8px;font-weight:600">Cloudinary Connected</span>'
+                : '<span style="font-size:0.7rem;background:var(--warning-light);color:var(--warning);border-radius:100px;padding:2px 10px;margin-left:8px;font-weight:600">Cloudinary not configured — files stored by name only</span>'}
             </div>
 
             <div class="form-group">
               <label class="form-label">Photos</label>
               <div class="file-upload-zone" id="photos-zone">
                 <input type="file" id="photos-input" multiple accept="image/*" onchange="PropertyForm.handleFiles('photos',this.files)" />
-                <div class="file-upload-icon">🖼️</div>
+                
                 <div class="file-upload-text"><strong>Click to upload</strong> or drag & drop photos</div>
                 <div class="file-upload-hint">JPG, PNG, WEBP · Max 10MB each</div>
               </div>
               <div class="camera-capture-row">
                 <label class="btn-capture" title="Take photo with camera">
-                  📷 Take Photo
+                  Take Photo
                   <input type="file" accept="image/*" capture="environment" multiple onchange="PropertyForm.handleFiles('photos',this.files)" />
                 </label>
               </div>
@@ -1957,13 +1954,13 @@ const PropertyForm = {
               <label class="form-label">Video Walkthrough</label>
               <div class="file-upload-zone" id="videos-zone">
                 <input type="file" id="videos-input" multiple accept="video/*" onchange="PropertyForm.handleFiles('videos',this.files)" />
-                <div class="file-upload-icon">🎥</div>
+                
                 <div class="file-upload-text"><strong>Click to upload</strong> or drag & drop videos</div>
                 <div class="file-upload-hint">MP4, MOV, AVI · Max 500MB each</div>
               </div>
               <div class="camera-capture-row">
                 <label class="btn-capture" title="Record video with camera">
-                  🎬 Record Video
+                  Record Video
                   <input type="file" accept="video/*" capture="environment" onchange="PropertyForm.handleFiles('videos',this.files)" />
                 </label>
               </div>
@@ -1974,7 +1971,7 @@ const PropertyForm = {
               <label class="form-label">Agreement Document</label>
               <div class="file-upload-zone" id="docs-zone">
                 <input type="file" id="docs-input" accept=".pdf,.doc,.docx" onchange="PropertyForm.handleFiles('docs',this.files)" />
-                <div class="file-upload-icon">📄</div>
+                
                 <div class="file-upload-text"><strong>Click to upload</strong> agreement document</div>
                 <div class="file-upload-hint">PDF, DOC, DOCX · Max 10MB</div>
               </div>
@@ -1984,7 +1981,7 @@ const PropertyForm = {
 
           <div style="display:flex;justify-content:flex-end;gap:12px;padding-bottom:40px">
             <button type="button" class="btn btn-secondary btn-lg" onclick="ConfirmModal.show('Clear all form data and start over?',()=>{PropertyForm.editMode=false;PropertyForm.editSubmissionId=null;PropertyForm._editData=null;PropertyForm.existingPhotos=[];PropertyForm.existingVideos=[];PropertyForm.existingDocs=[];document.getElementById('property-form').reset();PropertyForm.init();},{title:'Reset Form',confirmLabel:'Clear',confirmClass:'btn-secondary'})">Reset</button>
-            <button type="submit" id="submit-btn" class="btn btn-primary btn-lg">🚀 Submit Listing</button>
+            <button type="submit" id="submit-btn" class="btn btn-primary btn-lg">Submit Listing</button>
           </div>
         </form>
 
@@ -2093,7 +2090,7 @@ const PropertyForm = {
 
     // --- UI labels ---
     const submitBtn = document.getElementById('submit-btn');
-    if (submitBtn) submitBtn.innerHTML = '✏️ Update Listing';
+    if (submitBtn) submitBtn.innerHTML = 'Update Listing';
     const title = document.querySelector('.section-title');
     if (title) title.textContent = 'Edit Property Listing';
     const sub2 = document.querySelector('.section-subtitle');
@@ -2116,8 +2113,8 @@ const PropertyForm = {
             ? `<img src="${url}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1.5px solid var(--border)" />`
             : type === 'videos'
               ? `<video src="${url}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0"></video>`
-              : '<span style="font-size:1.4rem">📄</span>'}
-          <span style="flex:1;font-size:0.78rem;color:var(--success)">☁️ Uploaded to Cloudinary</span>
+              : ''}
+          <span style="flex:1;font-size:0.78rem;color:var(--success)">Uploaded to Cloudinary</span>
           <button class="file-remove" type="button" onclick="PropertyForm.removeExisting('${type}',${i})">✕</button>
         </div>`);
       container.innerHTML = html.join('');
@@ -2293,7 +2290,7 @@ const PropertyForm = {
     const display = document.getElementById('amenities-selected-display');
     if (!display) return;
     if (this.selectedAmenities.length === 0) { display.innerHTML = ''; return; }
-    display.innerHTML = `<span class="amenities-count">✅ ${this.selectedAmenities.length} selected: </span>` +
+    display.innerHTML = `<span class="amenities-count">${this.selectedAmenities.length} selected: </span>` +
       this.selectedAmenities.map(a => `<span class="amenity-tag">${sanitize(a)}</span>`).join('');
   },
 
@@ -2324,7 +2321,7 @@ const PropertyForm = {
         ? `<img src="${url}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1.5px solid var(--border)" alt="" />`
         : type === 'videos'
           ? `<video src="${url}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1.5px solid var(--border)"></video>`
-          : `<span style="font-size:1.4rem">📄</span>`;
+          : '';
       return `
         <div class="file-item" style="align-items:center">
           ${preview}
@@ -2437,7 +2434,7 @@ const PropertyForm = {
       if (fillEl) fillEl.style.width = '100%';
       setTimeout(() => {
         overlay.classList.remove('show');
-        Toast.success(this.editMode ? 'Property updated successfully! 🎉' : 'Property submitted successfully! 🎉');
+        Toast.success(this.editMode ? 'Property updated successfully!' : 'Property submitted successfully!');
         
         // Reset edit state
         this.editMode = false;
@@ -2453,7 +2450,7 @@ const PropertyForm = {
     } catch (err) {
       console.error('Submission error:', err);
       overlay.classList.remove('show');
-      if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = this.editMode ? '✏️ Update Listing' : '🚀 Submit Listing'; }
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = this.editMode ? 'Update Listing' : 'Submit Listing'; }
       Toast.error(`Failed to submit: ${err.message}`);
     }
   },

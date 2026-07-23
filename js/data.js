@@ -32,7 +32,7 @@ const DB = {
           createdAt:      new Date().toISOString(),
           lastLogin:      null,
         });
-        console.log('✅ Default admin created in Realtime DB.');
+        console.log('Default admin created in Realtime DB.');
       }
     } catch (e) {
       console.error('DB.init error:', e.message);

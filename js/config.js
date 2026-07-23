@@ -33,7 +33,7 @@ if (FIREBASE_CONFIGURED) {
     console.warn('Firebase init error:', e.message);
   }
 } else {
-  console.warn('⚠️  Firebase not configured yet. Update js/config.js with your credentials.');
+  console.warn('Firebase not configured yet. Update js/config.js with your credentials.');
 }
 
 // ============================================================
