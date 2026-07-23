@@ -92,7 +92,7 @@ function sanitize(str) {
 // ============================
 async function hashPassword(plain) {
   // Append a fixed app-level salt so rainbow tables don't work
-  const msgBuffer = new TextEncoder().encode(plain + '::cheston2024:salt');
+  const msgBuffer = new TextEncoder().encode(plain + '::realestateco2026:salt');
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
   return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
@@ -114,6 +114,12 @@ function listingBadgeClass(type) {
   if (type === 'For Rent')        return 'badge-rent';
   if (type === 'For Sale & Rent') return 'badge-both';
   return 'badge-rent';
+}
+
+function submissionStatusBadge(status) {
+  if (status === 'published')    return '<span class="badge badge-active">Published</span>';
+  if (status === 'under review') return '<span class="badge badge-review">Under Review</span>';
+  return '<span class="badge badge-pending">Submitted</span>';
 }
 
 // ============================
@@ -203,7 +209,7 @@ const CloudinaryUploader = {
     const data = await res.json();
     
     let url = data.secure_url;
-    // Automatically apply the Chestone company logo watermark to photos and videos
+    // Automatically apply the company logo watermark to photos and videos
     if (resourceType === 'image' || resourceType === 'video') {
       // Logo public ID: mzxbgjmgh0qumndt51g7
       const watermarkTransform = "l_mzxbgjmgh0qumndt51g7,w_0.15,c_scale/fl_layer_apply,g_south_east,x_30,y_30/";
@@ -353,7 +359,7 @@ const MarketingKit = {
                   </div>`).join('')}
                 <div class="info-box" style="margin-top:10px">
                   <span class="info-icon">💡</span>
-                  <span>To automatically brand videos with the Chestone logo, open <strong>cloudinary.com → Settings → Upload Presets → cheston_unsigned</strong> and add a logo overlay transformation.</span>
+                  <span>To automatically brand videos with your logo, open <strong>cloudinary.com → Settings → Upload Presets</strong> → your unsigned preset, and add a logo overlay transformation.</span>
                 </div>
               </div>` : ''}
           </div>
@@ -421,7 +427,7 @@ const MarketingKit = {
       : (sub.propertySize || '');
     const amenities = sub.amenities ? sub.amenities.split(',').map(s => s.trim()).filter(Boolean) : [];
     const notes     = (sub.fieldNotes || '').trim();
-    const phone     = sub.salespersonContact || '0726111133';
+    const phone     = sub.salespersonContact || '+254 712 345 678';
     // Public headline — no property name
     const headline  = unitTypes ? `${unitTypes} ${typeUpper} — ${location}, Nairobi`
                                 : `${typeUpper} — ${location}, Nairobi`;
@@ -433,12 +439,12 @@ const MarketingKit = {
     if (amenities.length)   brkLines.push(`AMENITIES: ${amenities.slice(0, 8).join(' | ')}`);
     if (notes)              brkLines.push('', notes.slice(0, 600) + (notes.length > 600 ? '…' : ''));
     brkLines.push(`\n📍 ${location}, Nairobi`, `📞 Contact: ${phone}`,
-      `Listed by Chestone Properties Ltd — 0726111133`,
+      `Listed by Real Estate Company — +254 712 345 678`,
       `(Viewing by appointment. Property name disclosed on request.)`);
     const buyRentKenya = brkLines.join('\n');
 
     // --- Social media ---
-    const hashtagBase = '#ChestoneProperties #NairobiRealEstate #KenyaProperties';
+    const hashtagBase = '#RealEstateCompany #NairobiRealEstate #KenyaProperties';
     const hashtagLoc  = '#' + location.replace(/\s+/g, '');
     const hashtagType = type === 'For Rent' ? '#PropertyForRent #NairobiRentals' : '#PropertyForSale #BuyProperty';
     const socialLines = [`🏠 ${headline}`];
@@ -447,23 +453,23 @@ const MarketingKit = {
     if (notes)            socialLines.push('', notes.slice(0, 250) + (notes.length > 250 ? '…' : ''));
     socialLines.push('', `📍 ${location}, Nairobi`,
       `📞 Book a viewing: ${phone}`,
-      `🌐 chestoneproperties.co.ke`, '',
+      `🌐 realestateco.co.ke`, '',
       `${hashtagBase} ${hashtagType} ${hashtagLoc}`);
     const social = socialLines.join('\n');
 
     // --- Google Ads ---
     const gh1 = (`${unitTypes || 'Property'} ${typeUpper}`).slice(0, 30);
     const gh2 = (`${typeUpper} in ${location}`).slice(0, 30);
-    const gh3 = (priceDisp || 'Chestone Properties').slice(0, 30);
+    const gh3 = (priceDisp || 'Real Estate Company').slice(0, 30);
     const gd1 = (`${unitTypes ? unitTypes + ' a' : 'A'}vailable in ${location}. ${amenities.slice(0, 2).join(', ')}.`).slice(0, 90);
-    const gd2 = (`Contact Chestone Properties. Call ${phone}. Structured property solutions.`).slice(0, 90);
+    const gd2 = (`Contact Real Estate Company. Call ${phone}. Structured property solutions.`).slice(0, 90);
     const googleAds = [
       `HEADLINE 1 (max 30 chars): ${gh1}`,
       `HEADLINE 2 (max 30 chars): ${gh2}`,
       `HEADLINE 3 (max 30 chars): ${gh3}`,
       `DESCRIPTION 1 (max 90 chars): ${gd1}`,
       `DESCRIPTION 2 (max 90 chars): ${gd2}`,
-      `FINAL URL: https://chestoneproperties.co.ke`,
+      `FINAL URL: https://realestateco.co.ke`,
     ].join('\n');
 
     // --- Meta Ads ---
@@ -478,7 +484,7 @@ const MarketingKit = {
     if (amenities.length) metaLines.push(`✅ ${amenities.slice(0, 5).join(', ')}`);
     metaLines.push('', `📍 ${location}, Nairobi`,
       `📞 Call/WhatsApp: ${phone}`,
-      `🌐 chestoneproperties.co.ke`, '',
+      `🌐 realestateco.co.ke`, '',
       `👉 DM or call to book a viewing. Property name disclosed on enquiry.`);
     const metaAds = metaLines.join('\n');
 
@@ -491,7 +497,7 @@ const MarketingKit = {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const W = 1080, H = 1080;
-    const NAVY = '#1a2744', GOLD = '#c9a84c', WHITE = '#ffffff';
+    const NAVY = '#123527', GOLD = '#c97c3d', WHITE = '#ffffff';
 
     const photos   = (sub.photos || []).filter(u => u.startsWith('http'));
     const nPhotos  = photos.length;
@@ -519,7 +525,7 @@ const MarketingKit = {
     ctx.fillStyle = GOLD;
     ctx.font = 'bold 38px Georgia, serif';
     ctx.textAlign = 'center';
-    ctx.fillText('CHESTONE PROPERTIES LTD', W / 2, 56);
+    ctx.fillText('REAL ESTATE COMPANY', W / 2, 56);
     ctx.font = '17px Arial, sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.72)';
     ctx.fillText('Structured Property Solutions', W / 2, 85);
@@ -656,13 +662,13 @@ const MarketingKit = {
     ctx.fillStyle = GOLD;
     ctx.font = 'bold 44px Georgia, serif';
     ctx.textAlign = 'center';
-    ctx.fillText('CALL US: 0726111133', W / 2, 963);
+    ctx.fillText('CALL US: +254 712 345 678', W / 2, 963);
     ctx.fillStyle = 'rgba(255,255,255,0.80)';
     ctx.font = '19px Arial, sans-serif';
-    ctx.fillText('info@chestoneproperties.co.ke  |  chestoneproperties.co.ke', W / 2, 1005);
+    ctx.fillText('hello@realestateco.co.ke  |  realestateco.co.ke', W / 2, 1005);
     ctx.fillStyle = GOLD;
     ctx.font = '15px Arial, sans-serif';
-    ctx.fillText('@chestoneproperties  ·  fb: Chestone Properties', W / 2, 1043);
+    ctx.fillText('@realestateco  ·  fb: Real Estate Company', W / 2, 1043);
 
     // ── LOAD REAL PHOTOS INTO SLOTS ───────────────────────────
     if (photos.length > 0 && slots.length > 0) {
@@ -701,7 +707,7 @@ const MarketingKit = {
     if (!canvas) return;
     try {
       const a = document.createElement('a');
-      a.download = 'chestone-' + (this._sub.propertyLocation || 'property').replace(/[^a-z0-9]/gi, '-').toLowerCase() + '-poster.png';
+      a.download = 'realestateco-' + (this._sub.propertyLocation || 'property').replace(/[^a-z0-9]/gi, '-').toLowerCase() + '-poster.png';
       a.href = canvas.toDataURL('image/png');
       a.click();
     } catch (err) {
@@ -855,10 +861,18 @@ const LoginPage = {
 
             <!-- Sign In panel -->
             <div id="login-panel">
+              <div class="info-box" style="margin-bottom:16px">
+                <span class="info-icon">💡</span>
+                <span>
+                  <strong>Demo mode</strong> — this is a portfolio showcase. Sign in with
+                  <strong>admin@realestateco.co.ke</strong> / <strong>Demo@2026</strong>,
+                  or <button type="button" onclick="LoginPage.fillDemoLogin()" style="background:none;border:none;color:var(--navy);font-weight:700;text-decoration:underline;cursor:pointer;padding:0;font-size:inherit">click here to sign in instantly</button>.
+                </span>
+              </div>
               <form id="login-form" onsubmit="LoginPage.handleLogin(event)">
                 <div class="form-group">
                   <label class="form-label" for="login-email">Email Address</label>
-                  <input id="login-email" type="email" class="form-control" placeholder="you@chestone.co.ke" required autocomplete="email" />
+                  <input id="login-email" type="email" class="form-control" placeholder="you@realestateco.co.ke" required autocomplete="email" value="admin@realestateco.co.ke" />
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="login-password">Password</label>
@@ -884,11 +898,11 @@ const LoginPage = {
                 <form id="fp-email-form" onsubmit="LoginPage.handleForgotPassword(event)">
                   <div class="form-group">
                     <label class="form-label">Email Address</label>
-                    <input type="email" id="fp-email" class="form-control" placeholder="you@chestone.co.ke" required />
+                    <input type="email" id="fp-email" class="form-control" placeholder="you@realestateco.co.ke" required />
                   </div>
                   <button type="submit" class="btn btn-primary btn-full" id="fp-email-btn">Send Reset Code</button>
                 </form>
-                <p style="text-align:center;margin-top:14px;font-size:0.78rem;color:var(--text-muted)">No account? Contact <strong>admin@chestone.co.ke</strong></p>
+                <p style="text-align:center;margin-top:14px;font-size:0.78rem;color:var(--text-muted)">No account? Contact <strong>admin@realestateco.co.ke</strong></p>
               </div>
               <!-- Step 2: Enter OTP -->
               <div id="fp-step-2" style="display:none">
@@ -951,6 +965,12 @@ const LoginPage = {
       const el = document.getElementById(`fp-step-${s}`);
       if (el) el.style.display = s === step ? 'block' : 'none';
     });
+  },
+
+  fillDemoLogin() {
+    document.getElementById('login-email').value = 'admin@realestateco.co.ke';
+    document.getElementById('login-password').value = 'Demo@2026';
+    document.getElementById('login-form').requestSubmit();
   },
 
   togglePassword(inputId, btn) {
@@ -1095,7 +1115,7 @@ const AdminDashboard = {
         <div class="navbar-inner">
           <div class="logo">
             <div class="logo-icon">🏢</div>
-            <div><div class="logo-text">${CONFIG.appName}</div><span class="logo-sub">Admin Portal</span></div>
+            <div><div class="logo-text">${CONFIG.appName}</div><span class="logo-sub">Admin Portal · <span class="badge badge-rent" style="vertical-align:middle">Demo</span></span></div>
           </div>
           <div class="nav-actions">
             <div class="nav-user">
@@ -1193,7 +1213,7 @@ const AdminDashboard = {
               &nbsp;/&nbsp;
               <span style="color:var(--success)">${forRent}</span><span style="font-size:0.7rem;color:var(--text-muted)"> rent</span>
               &nbsp;/&nbsp;
-              <span style="color:#7c3aed">${forBoth}</span><span style="font-size:0.7rem;color:var(--text-muted)"> both</span>
+              <span style="color:#475569">${forBoth}</span><span style="font-size:0.7rem;color:var(--text-muted)"> both</span>
             </div>
             <div class="stat-label">Sale / Rent / Both</div>
           </div>
@@ -1298,8 +1318,8 @@ const AdminDashboard = {
                 </div>
               </div>
               <div class="form-row">
-                <div class="form-group"><label class="form-label">Email Address <span class="required">*</span></label><input type="email" id="user-email" class="form-control" placeholder="jane@chestone.co.ke" required /></div>
-                <div class="form-group"><label class="form-label">Phone Number</label><input type="tel" id="user-phone" class="form-control" placeholder="+254700000000" /></div>
+                <div class="form-group"><label class="form-label">Email Address <span class="required">*</span></label><input type="email" id="user-email" class="form-control" placeholder="jane@realestateco.co.ke" required /></div>
+                <div class="form-group"><label class="form-label">Phone Number</label><input type="tel" id="user-phone" class="form-control" placeholder="+254712345678" /></div>
               </div>
               <div class="form-group">
                 <label class="form-label">Password <span class="required">*</span></label>
@@ -1361,9 +1381,12 @@ const AdminDashboard = {
             <div class="property-card">
               <div class="property-card-header">
                 <div><div class="property-title">${sanitize(s.propertyTitle)}</div><div class="property-location">📍 ${sanitize(s.propertyLocation)}</div></div>
-                <span class="badge ${listingBadgeClass(s.listingType)}">${sanitize(s.listingType)}</span>
+                <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+                  <span class="badge ${listingBadgeClass(s.listingType)}">${sanitize(s.listingType)}</span>
+                  ${submissionStatusBadge(s.status)}
+                </div>
               </div>
-              ${thumb ? `<div style="height:160px;overflow:hidden;cursor:pointer" onclick="LightboxViewer.open(${JSON.stringify(s.photos.filter(u=>u.startsWith('http')))},0)"><img src="${thumb}" alt="${sanitize(s.propertyTitle)}" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
+              ${thumb ? `<div style="height:160px;overflow:hidden;cursor:pointer" onclick="LightboxViewer.open(${JSON.stringify(s.photos.filter(u=>u.startsWith('http')))},0)"><img src="${thumb}" loading="lazy" alt="${sanitize(s.propertyTitle)}" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
               <div class="property-card-body">
                 <div class="property-detail"><span class="property-detail-icon">🛏️</span>${sanitize(unitSummary || 'N/A')}</div>
                 <div class="property-detail"><span class="property-detail-icon">🌟</span>${sanitize(s.amenities || 'N/A')}</div>
@@ -1473,6 +1496,7 @@ const AdminDashboard = {
           <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value">📞 ${sanitize(sub.salespersonContact)}</div></div>
           <div class="detail-item"><div class="detail-label">Location</div><div class="detail-value">📍 ${sanitize(sub.propertyLocation)}</div></div>
           <div class="detail-item"><div class="detail-label">Listing Type</div><div class="detail-value"><span class="badge ${listingBadgeClass(sub.listingType)}">${sanitize(sub.listingType)}</span></div></div>
+          <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value">${submissionStatusBadge(sub.status)}</div></div>
           ${legacyPriceHtml}
           <div class="detail-item"><div class="detail-label">Amenities</div><div class="detail-value">${sanitize(sub.amenities || 'None listed')}</div></div>
           <div class="detail-item"><div class="detail-label">Submitted</div><div class="detail-value">${formatDateTime(sub.createdAt)}</div></div>
@@ -1634,7 +1658,7 @@ const SalespersonDashboard = {
         <div class="navbar-inner">
           <div class="logo">
             <div class="logo-icon">🏢</div>
-            <div><div class="logo-text">${CONFIG.appName}</div><span class="logo-sub">Salesperson Portal</span></div>
+            <div><div class="logo-text">${CONFIG.appName}</div><span class="logo-sub">Salesperson Portal · <span class="badge badge-rent" style="vertical-align:middle">Demo</span></span></div>
           </div>
           <div class="nav-actions">
             <div class="nav-user">
@@ -1738,7 +1762,7 @@ const SalespersonDashboard = {
                       <div><div class="property-title">${sanitize(s.propertyTitle)}</div><div class="property-location">📍 ${sanitize(s.propertyLocation)}</div></div>
                       <span class="badge ${listingBadgeClass(s.listingType)}">${sanitize(s.listingType)}</span>
                     </div>
-                    ${thumb ? `<div style="height:120px;overflow:hidden"><img src="${thumb}" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
+                    ${thumb ? `<div style="height:120px;overflow:hidden"><img src="${thumb}" loading="lazy" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
                     <div class="property-card-footer">
                       <div class="property-price">${dispPrice}</div>
                       <div style="font-size:0.75rem;color:var(--text-muted)">${formatDate(s.createdAt)}</div>
@@ -1780,9 +1804,12 @@ const SalespersonDashboard = {
                 <div class="property-card">
                   <div class="property-card-header">
                     <div><div class="property-title">${sanitize(s.propertyTitle)}</div><div class="property-location">📍 ${sanitize(s.propertyLocation)}</div></div>
-                    <span class="badge ${listingBadgeClass(s.listingType)}">${sanitize(s.listingType)}</span>
+                    <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+                      <span class="badge ${listingBadgeClass(s.listingType)}">${sanitize(s.listingType)}</span>
+                      ${submissionStatusBadge(s.status)}
+                    </div>
                   </div>
-                  ${thumb ? `<div style="height:160px;overflow:hidden"><img src="${thumb}" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
+                  ${thumb ? `<div style="height:160px;overflow:hidden"><img src="${thumb}" loading="lazy" style="width:100%;height:100%;object-fit:cover" /></div>` : ''}
                   <div class="property-card-body">
                     <div class="property-detail"><span class="property-detail-icon">🛏️</span>${sanitize(unitSummary || 'N/A')}</div>
                     <div class="property-detail"><span class="property-detail-icon">🌟</span>${sanitize(s.amenities || 'N/A')}</div>
@@ -1829,7 +1856,7 @@ const PropertyForm = {
             <div class="form-section-title">👤 Agent Information</div>
             <div class="form-row">
               <div class="form-group"><label class="form-label">Salesperson Name</label><input type="text" class="form-control" value="${user.name}" readonly style="opacity:0.7;cursor:not-allowed" /></div>
-              <div class="form-group"><label class="form-label">Contact Number <span class="required">*</span></label><input type="tel" class="form-control" value="${user.phone || ''}" id="sp-contact" placeholder="+254700000000" required /></div>
+              <div class="form-group"><label class="form-label">Contact Number <span class="required">*</span></label><input type="tel" class="form-control" value="${user.phone || ''}" id="sp-contact" placeholder="+254712345678" required /></div>
             </div>
           </div>
 

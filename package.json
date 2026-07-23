@@ -1,0 +1,9 @@
+{
+  "name": "real-estate-company-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Portfolio demo — property onboarding platform (Vanilla JS + Firebase). Not a live business.",
+  "scripts": {
+    "dev": "python -m http.server 8080"
+  }
+}

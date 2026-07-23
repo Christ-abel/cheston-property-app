@@ -1,6 +1,6 @@
 {
   "rules": {
-    "cheston_users": {
+    "realestate_users": {
       ".read": true,
       ".write": false,
       "$uid": {
@@ -8,7 +8,7 @@
         ".validate": "newData.hasChildren(['id', 'name', 'email', 'role', 'status']) || !newData.exists()"
       }
     },
-    "cheston_submissions": {
+    "realestate_submissions": {
       ".read": true,
       ".write": false,
       "$sid": {
@@ -22,3 +22,4 @@
     }
   }
 }
+

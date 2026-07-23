@@ -4,9 +4,9 @@
 // STEP 1 — FIREBASE SETUP
 // ---------------------------------------------------------------
 // 1. Go to: https://console.firebase.google.com
-// 2. Click "Add project" → give it a name (e.g. chestone-property)
+// 2. Click "Add project" → give it a name (e.g. realestate-demo)
 // 3. Disable Google Analytics (not needed) → Create project
-// 4. Click the Web icon </> → register app (name: cheston-web)
+// 4. Click the Web icon </> → register app (name: realestate-web)
 // 5. Copy the firebaseConfig object below and paste your values
 // 6. In the Firebase Console: Build → Firestore Database → Create database
 //    Choose "Start in test mode" → select a region (e.g. europe-west1) → Enable
@@ -43,14 +43,14 @@ if (FIREBASE_CONFIGURED) {
 // 2. Note your "Cloud name" on the Dashboard
 // 3. Go to: Settings → Upload → "Add upload preset"
 //    - Signing Mode: Unsigned
-//    - Folder: cheston-properties
+//    - Folder: realestate-properties
 //    - Save the preset name
 // 4. Fill in cloudName and uploadPreset below
 // ---------------------------------------------------------------
 const CLOUDINARY = {
   cloudName:    'dlifykbon',
-  uploadPreset: 'cheston_unsigned',
-  folder:       'cheston-properties',
+  uploadPreset: 'cheston_unsigned', // NOTE: tied to an existing Cloudinary preset — see caveats
+  folder:       'realestate-properties',
 };
 const CLOUDINARY_CONFIGURED = !CLOUDINARY.cloudName.startsWith('PASTE_');
 
@@ -65,7 +65,7 @@ const CLOUDINARY_CONFIGURED = !CLOUDINARY.cloudName.startsWith('PASTE_');
 //    - Click "Add New Service" → Gmail → Connect Account → Save
 //    - Note your SERVICE ID (e.g. "service_abc123")
 // 3. Go to "Email Templates" → "Create New Template"
-//    - Subject:  "Your Chestone Properties Password Reset Code"
+//    - Subject:  "Your Real Estate Company Password Reset Code"
 //    - Body:     Hello {{to_name}},
 //                Your password reset code is: {{otp_code}}
 //                This code expires in 15 minutes.
@@ -86,13 +86,13 @@ const EMAILJS_CONFIGURED = !EMAILJS_CONFIG.publicKey.startsWith('PASTE_');
 // APP CONFIG — locations, listing types, amenities
 // ============================================================
 const CONFIG = {
-  appName:    'Chestone Properties',
-  appTagline: 'Internal Onboarding System',
+  appName:    'Real Estate Company',
+  appTagline: 'Property Onboarding Demo',
   currency:   'KSh',
 
   propertyLocations: [
-    'Kileleshwa', 'Lavington', 'Kilimani',
-    'Westlands',  'Riverside', 'Karen',
+    'Kileleshwa', 'Lavington',    'Kilimani',
+    'Westlands',  'Riverside',    'Karen', 'Ongata Rongai',
   ],
 
   listingTypes: ['For Sale', 'For Rent', 'For Sale & Rent'],

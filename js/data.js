@@ -4,8 +4,8 @@
 
 const DB = {
   PATHS: {
-    USERS:       'cheston_users',
-    SUBMISSIONS: 'cheston_submissions',
+    USERS:       'realestate_users',
+    SUBMISSIONS: 'realestate_submissions',
   },
 
   // ----------------------------------------------------------
@@ -18,16 +18,16 @@ const DB = {
       
       if (!snap.exists()) {
         const adminId = 'admin-001';
-        // SHA-256('Admin@123::cheston2024:salt') — pre-computed; matches hashPassword() in app.js
-        const defaultHash = 'b520882bb14dd74fe323b6d7878cd3dd40df6fe2eead9009fbeecff088eb9838';
+        // SHA-256('Demo@2026::realestateco2026:salt') — pre-computed; matches hashPassword() in app.js
+        const defaultHash = '04016625abe0d969b921bc1b1a292a1badb3b4f9f6458ce480f44461a75fc9ed';
         await db.ref(this.PATHS.USERS + '/' + adminId).set({
           id:             adminId,
-          name:           'Admin',
-          email:          'admin@cheston.co.ke',
+          name:           'Demo Admin',
+          email:          'admin@realestateco.co.ke',
           password:       defaultHash,
           passwordHashed: true,
           role:           'admin',
-          phone:          '+254700000000',
+          phone:          '+254712345678',
           status:         'active',
           createdAt:      new Date().toISOString(),
           lastLogin:      null,
@@ -188,14 +188,14 @@ const DB = {
   // SESSION  (stays synchronous — sessionStorage is fine)
   // ----------------------------------------------------------
   getCurrentUser() {
-    const raw = sessionStorage.getItem('cheston_current_user');
+    const raw = sessionStorage.getItem('realestate_current_user');
     return raw ? JSON.parse(raw) : null;
   },
   setCurrentUser(user) {
-    sessionStorage.setItem('cheston_current_user', JSON.stringify(user));
+    sessionStorage.setItem('realestate_current_user', JSON.stringify(user));
     if (user && db) this.updateUser(user.id, { lastLogin: new Date().toISOString() }).catch(() => {});
   },
   logout() {
-    sessionStorage.removeItem('cheston_current_user');
+    sessionStorage.removeItem('realestate_current_user');
   },
 };

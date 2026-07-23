@@ -1,14 +1,14 @@
 /* ============================================================
-   css/marketing.css — Public marketing site for Chestone Properties
+   css/marketing.css — Public marketing site for Real Estate Company
    ============================================================ */
 
 :root {
-  --navy:       #0D2B55;
-  --navy-deep:  #091e3e;
-  --navy-light: #E8EFF7;
-  --gold:       #C9A84C;
-  --gold-light: #F5EDD6;
-  --gold-hover: #b8942e;
+  --navy:       #10402F;
+  --navy-deep:  #0A2B1F;
+  --navy-light: #E7EFEA;
+  --gold:       #C97C3D;
+  --gold-light: #F6E9DC;
+  --gold-hover: #B36A2E;
   --ink:        #1c2733;
   --muted:      #5b6b80;
 }
@@ -38,10 +38,14 @@ section { padding: 5rem 1.5rem; }
   display: flex; align-items: center; justify-content: space-between;
   padding: 0.85rem 1.5rem;
 }
-.site-nav .brand { display: flex; align-items: center; gap: 0.65rem; }
-.site-nav .brand img { height: 38px; width: 38px; border-radius: 8px; object-fit: cover; }
-.site-nav .brand-name { color: #fff; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.2px; }
-.site-nav .brand-sub { color: var(--gold); font-size: 0.68rem; display: block; font-weight: 400; }
+.site-nav .brand { display: flex; align-items: center; gap: 0.75rem; }
+.wordmark { height: 26px; width: auto; }
+.demo-badge {
+  background: rgba(201,124,61,0.18); color: var(--gold);
+  border: 1px solid rgba(201,124,61,0.5); font-weight: 700;
+  font-size: 0.68rem; letter-spacing: 0.5px; text-transform: uppercase;
+  padding: 0.2rem 0.55rem; border-radius: 999px;
+}
 .site-nav .nav-links { display: flex; align-items: center; gap: 1.75rem; }
 .site-nav .nav-links a:not(.btn-login) { color: var(--navy-light); font-size: 0.92rem; opacity: 0.9; }
 .site-nav .nav-links a:not(.btn-login):hover { opacity: 1; color: var(--gold); }
@@ -72,6 +76,10 @@ section { padding: 5rem 1.5rem; }
   color: var(--navy-light); font-size: 1.05rem; opacity: 0.9;
 }
 .hero .cta-row { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+.hero-demo-note {
+  margin: 1.75rem auto 0; max-width: 480px; font-size: 0.8rem;
+  color: var(--gold); opacity: 0.85; letter-spacing: 0.2px;
+}
 .btn-gold-solid {
   background: var(--gold); color: var(--navy); font-weight: 700;
   padding: 0.85rem 1.75rem; border-radius: 10px; font-size: 0.98rem;
@@ -99,7 +107,7 @@ section { padding: 5rem 1.5rem; }
 .about-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
 .stat-card {
   background: var(--navy-light); border-radius: 14px; padding: 2rem 1.5rem; text-align: center;
-  border: 1px solid rgba(13,43,85,0.08);
+  border: 1px solid rgba(16, 64, 47,0.08);
 }
 .stat-card .num { font-size: 2.1rem; font-weight: 800; color: var(--navy); }
 .stat-card .label { color: var(--muted); font-size: 0.9rem; margin-top: 0.35rem; }
@@ -109,7 +117,7 @@ section { padding: 5rem 1.5rem; }
 .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
 .service-card {
   background: #fff; border-radius: 14px; padding: 2rem 1.75rem;
-  border-top: 4px solid var(--gold); box-shadow: 0 8px 24px rgba(13,43,85,0.06);
+  border-top: 4px solid var(--gold); box-shadow: 0 8px 24px rgba(16, 64, 47,0.06);
 }
 .service-card .icon {
   width: 46px; height: 46px; border-radius: 10px; background: var(--navy);
@@ -125,7 +133,7 @@ section { padding: 5rem 1.5rem; }
 .location-pills span {
   background: var(--navy-light); color: var(--navy); font-weight: 600;
   padding: 0.6rem 1.3rem; border-radius: 999px; font-size: 0.92rem;
-  border: 1px solid rgba(13,43,85,0.1);
+  border: 1px solid rgba(16, 64, 47,0.1);
 }
 
 /* ---------- CTA band ---------- */
@@ -146,9 +154,9 @@ footer h4 { color: #fff; font-size: 0.95rem; margin-bottom: 0.9rem; }
 footer p, footer a { color: var(--navy-light); opacity: 0.8; font-size: 0.9rem; }
 footer .foot-links { display: flex; flex-direction: column; gap: 0.5rem; }
 footer a:hover { opacity: 1; color: var(--gold); }
-.foot-brand { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem; }
-.foot-brand img { height: 34px; width: 34px; border-radius: 7px; }
-.foot-brand span { color: #fff; font-weight: 700; }
+.foot-brand { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; }
+.foot-brand .wordmark { height: 24px; }
+.foot-demo-note { color: var(--gold) !important; opacity: 0.9 !important; font-size: 0.82rem; margin-top: 0.4rem; }
 .foot-bottom {
   max-width: 1100px; margin: 0 auto; padding-top: 1.5rem;
   border-top: 1px solid rgba(255,255,255,0.1);
